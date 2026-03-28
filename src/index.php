@@ -65,13 +65,15 @@ if (isset($_SESSION['role'])) {
                     <h2 style="color: #3b82f6; margin-top: 0;">Équipe Sécurité</h2>
                     <p class="card-desc">Espace réservé aux Risk Managers. Accès au registre global, référentiels EBIOS RM et pilotage des ateliers.</p>
                 </div>
-                <a href="admin_login.php" class="btn btn-mj" style="width: 100%; box-sizing: border-box; font-size: 1.2rem; padding: 15px; background: #3b82f6; border: none; color: white;">🔐 Connexion Expert</a>
+                <a href="admin_login.php" class="btn btn-mj" style="width: 100%; box-sizing: border-box; font-size: 1.2rem; padding: 15px; background: #3b82f6; border: none; color: white;">🔐 Connexion </a>
             </div>
             
         </div>
         
         <div style="text-align: center; margin-top: 40px; color: #484f58; font-size: 0.85rem;">
-            RiskMapping Suite • Basé sur la méthodologie ISO 27005
+            <p style="color: #8b949e; font-size: 0.9rem; margin-top: 20px;">
+                RiskMapping Suite • Inspiré de la méthode <strong>EBIOS RM (ANSSI)</strong>
+            </p>
         </div>
     </div>
 </body>

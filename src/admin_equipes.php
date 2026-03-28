@@ -1,54 +1,17 @@
 <?php
 // src/admin_equipes.php
-header('Content-Type: text/html; charset=utf-8');
-require 'db.php';
-
+session_start();
 $admin_role = $_SESSION['admin_role'] ?? 'lecteur';
-if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'MJ' || $admin_role === 'lecteur') { die("<div style='color:red; padding:20px;'>Accès refusé.</div>"); }
-
-$message = '';
-
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    if (isset($_POST['action']) && $_POST['action'] === 'add') {
-        $nom = trim($_POST['nom_equipe']);
-        if (!empty($nom)) {
-            try {
-                $stmt = $pdo->prepare("INSERT INTO equipes (nom) VALUES (?)");
-                $stmt->execute([$nom]);
-                $message = "✅ Équipe '$nom' ajoutée avec succès.";
-                log_audit($pdo, $_SESSION['admin_id'], 'TEAM_ADDED', "Ajout équipe : $nom");
-            } catch (PDOException $e) {
-                $message = "⚠️ Cette équipe existe déjà.";
-            }
-        }
-    } elseif (isset($_POST['action']) && $_POST['action'] === 'delete') {
-        if ($admin_role === 'admin') {
-            $id_del = (int)$_POST['id_equipe'];
-            
-            $stmt_info = $pdo->prepare("SELECT nom FROM equipes WHERE id = ?");
-            $stmt_info->execute([$id_del]);
-            $nom_del = $stmt_info->fetchColumn() ?: "ID $id_del";
-            
-            $pdo->prepare("DELETE FROM equipes WHERE id = ?")->execute([$id_del]);
-            $message = "🗑️ Équipe supprimée.";
-            log_audit($pdo, $_SESSION['admin_id'], 'TEAM_DELETED', "Suppression équipe : $nom_del");
-        } else {
-            $message = "⚠️ Action bloquée. Seul un administrateur peut supprimer.";
-            log_audit($pdo, $_SESSION['admin_id'], 'UNAUTHORIZED_ACTION', "Tentative de suppression d'équipe.");
-        }
-    }
+if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'MJ' || $admin_role === 'lecteur') { 
+    die("<div style='color:red; padding:20px;'>Accès refusé.</div>"); 
 }
-
-$equipes = $pdo->query("SELECT * FROM equipes ORDER BY nom")->fetchAll();
 ?>
 
 <div style="padding: 20px; background: #161b22; border-radius: 8px; border: 1px solid #30363d;">
     <h2 style="color: #fff; margin-top: 0;">🏢 Gestion des Équipes / Services</h2>
-    <p style="color: #8b949e; margin-bottom: 20px;">Personnalisez la liste des directions.</p>
+    <p style="color: #8b949e; margin-bottom: 20px;">Personnalisez la liste des directions proposées lors de l'inscription des participants.</p>
 
-    <?php if ($message): ?>
-        <div style="padding: 10px; background: rgba(59, 130, 246, 0.1); border: 1px solid #3b82f6; border-radius: 4px; margin-bottom: 20px; color: #3b82f6;"><?= $message ?></div>
-    <?php endif; ?>
+    <div id="api-message-equipes" style="display: none; padding: 10px; border-radius: 4px; margin-bottom: 20px;"></div>
 
     <table style="width: 100%; border-collapse: collapse; margin-bottom: 30px;">
         <thead>
@@ -57,30 +20,82 @@ $equipes = $pdo->query("SELECT * FROM equipes ORDER BY nom")->fetchAll();
                 <th style="padding: 10px; text-align: right;">Action</th>
             </tr>
         </thead>
-        <tbody>
-            <?php foreach ($equipes as $eq): ?>
-            <tr style="border-bottom: 1px solid #30363d;">
-                <td style="padding: 10px; color: #fff; font-weight: bold;"><?= htmlspecialchars($eq['nom']) ?></td>
-                <td style="padding: 10px; text-align: right;">
-                    <?php if ($admin_role === 'admin'): ?>
-                        <form method="POST" style="display:inline;" onsubmit="event.preventDefault(); handleAjaxForm(this, 'admin_equipes.php');">
-                            <input type="hidden" name="action" value="delete">
-                            <input type="hidden" name="id_equipe" value="<?= $eq['id'] ?>">
-                            <button type="submit" style="background:none; border:none; color:#ff4d4d; cursor:pointer;" onclick="return confirm('Supprimer ce service de la liste ?');">🗑️</button>
-                        </form>
-                    <?php else: ?>
-                        <span style="color: #8b949e; font-size: 0.8rem;" title="Droits administrateur requis">🔒</span>
-                    <?php endif; ?>
-                </td>
-            </tr>
-            <?php endforeach; ?>
+        <tbody id="table-body-equipes">
+            <tr><td colspan="2" style="text-align:center; padding:20px; color:#8b949e;">Chargement des données via API...</td></tr>
         </tbody>
     </table>
 
     <h4 style="color: #3b82f6; margin-bottom: 15px;">➕ Ajouter un nouveau service</h4>
-    <form method="POST" onsubmit="event.preventDefault(); handleAjaxForm(this, 'admin_equipes.php');" style="display: flex; gap: 10px;">
-        <input type="hidden" name="action" value="add">
-        <input type="text" name="nom_equipe" placeholder="Ex: Direction des Ressources Humaines" required style="flex: 1; padding: 10px; background: #0d1117; color: #fff; border: 1px solid #3b82f6; border-radius: 4px;">
+    <form id="form-add-equipe" style="display: flex; gap: 10px;">
+        <input type="text" id="input-nom-equipe" placeholder="Ex: Direction des Ressources Humaines" required style="flex: 1; padding: 10px; background: #0d1117; color: #fff; border: 1px solid #3b82f6; border-radius: 4px;">
         <button type="submit" class="btn btn-mj" style="padding: 10px 20px; background: #3b82f6; border: none; color: white;">Ajouter</button>
     </form>
 </div>
+
+<script>
+    var apiEndpointEquipes = 'api_equipes.php';
+    var tableBodyEquipes = document.getElementById('table-body-equipes');
+    var msgBoxEquipes = document.getElementById('api-message-equipes');
+
+    function showMessageEquipes(text, isError = false) {
+        msgBoxEquipes.style.display = 'block';
+        msgBoxEquipes.textContent = text;
+        msgBoxEquipes.style.backgroundColor = isError ? 'rgba(255, 68, 68, 0.2)' : 'rgba(59, 130, 246, 0.1)';
+        msgBoxEquipes.style.color = isError ? '#ff4d4d' : '#3b82f6';
+        msgBoxEquipes.style.border = `1px solid ${isError ? '#ff4d4d' : '#3b82f6'}`;
+        setTimeout(() => msgBoxEquipes.style.display = 'none', 4000);
+    }
+
+    async function loadEquipes() {
+        try {
+            const response = await fetch(apiEndpointEquipes);
+            const json = await response.json();
+
+            if (json.status !== 'success') { showMessageEquipes(json.message, true); return; }
+
+            tableBodyEquipes.innerHTML = '';
+            if (json.data.length === 0) {
+                tableBodyEquipes.innerHTML = '<tr><td colspan="2" style="text-align:center; padding:10px; color:#8b949e;">Aucune équipe configurée.</td></tr>';
+                return;
+            }
+
+            json.data.forEach(equipe => {
+                const tr = document.createElement('tr');
+                tr.style.borderBottom = '1px solid #30363d';
+                let deleteBtnHTML = `<span style="color: #8b949e; font-size: 0.8rem;" title="Droits administrateur requis">🔒</span>`;
+                if (json.user_role === 'admin') {
+                    deleteBtnHTML = `<button onclick="deleteEquipe(${equipe.id})" style="background:none; border:none; color:#ff4d4d; cursor:pointer;" title="Supprimer">🗑️</button>`;
+                }
+                tr.innerHTML = `
+                    <td style="padding: 10px; color: #fff; font-weight: bold;">${equipe.nom}</td>
+                    <td style="padding: 10px; text-align: right;">${deleteBtnHTML}</td>
+                `;
+                tableBodyEquipes.appendChild(tr);
+            });
+        } catch (error) { showMessageEquipes("Erreur de connexion à l'API.", true); }
+    }
+
+    document.getElementById('form-add-equipe').addEventListener('submit', async function(e) {
+        e.preventDefault(); 
+        const data = { nom_equipe: document.getElementById('input-nom-equipe').value };
+        try {
+            const response = await fetch(apiEndpointEquipes, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+            const json = await response.json();
+            if (json.status === 'success') {
+                showMessageEquipes(json.message); document.getElementById('form-add-equipe').reset(); loadEquipes(); 
+            } else { showMessageEquipes(json.message, true); }
+        } catch (error) { showMessageEquipes("Erreur lors de l'envoi à l'API.", true); }
+    });
+
+    async function deleteEquipe(id) {
+        if (!confirm("Voulez-vous vraiment supprimer ce service de la liste ?")) return;
+        try {
+            const response = await fetch(apiEndpointEquipes, { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: id }) });
+            const json = await response.json();
+            if (json.status === 'success') { showMessageEquipes(json.message); loadEquipes(); } 
+            else { showMessageEquipes(json.message, true); }
+        } catch (error) { showMessageEquipes("Erreur lors de la suppression.", true); }
+    }
+
+    loadEquipes();
+</script>
