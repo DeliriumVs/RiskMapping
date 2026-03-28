@@ -103,6 +103,7 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'MJ') { die("Accès refus
 
 <script>
     var apiRegistre = 'api_registre.php';
+    var apiActions = 'api_actions.php'; // Nouvelle API
     var sortableInstance = null;
 
     function showMsgReg(text, isError = false) {
@@ -144,7 +145,7 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'MJ') { die("Accès refus
                 <th>Vraisemblance</th>
                 <th>Niveau</th>
                 <th>Criticité</th>
-                <th style="width: 20%;">Traitement</th>`;
+                <th style="width: 25%;">Traitement & Plan d'Action</th>`;
             if (json.user_role !== 'lecteur') thHtml += `<th class="no-print">Actions</th>`;
             thead.innerHTML = thHtml;
             
@@ -170,17 +171,15 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'MJ') { die("Accès refus
 
                 const niv = parseInt(s.niveau_ebios);
                 const c_risk = niv >= 4 ? 'risk-critical' : (niv >= 3 ? 'risk-high' : (niv >= 2 ? 'risk-medium' : 'risk-low'));
-                
                 const prio = parseInt(s.priorite);
                 const c_mult = prio >= 12 ? 'risk-high' : (prio >= 6 ? 'risk-medium' : 'risk-low');
-                
                 const trait = s.strategie_traitement;
                 const c_trait = "trait-" + trait.split(' ')[0];
-                
                 const dateC = new Date(s.created_at).toLocaleDateString('fr-FR', {day: '2-digit', month: '2-digit', year: '2-digit'});
 
                 const tr = document.createElement('tr');
                 tr.setAttribute('data-id', s.id);
+                tr.classList.add('main-row');
                 
                 let html = `
                     <td class="drag-handle no-print" style="vertical-align: middle;">⣿</td>
@@ -191,24 +190,140 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'MJ') { die("Accès refus
                     <td style="text-align: center;"><strong>${vrai}</strong></td>
                     <td style="text-align: center;"><span class="badge-risk ${c_risk}">${niv}</span></td>
                     <td style="text-align: center;"><span class="badge-risk ${c_mult}">${prio}</span></td>
-                    <td style="text-align: center;"><span class="badge-traitement ${c_trait}">${trait}</span></td>
+                    <td style="text-align: center;">
+                        <span class="badge-traitement ${c_trait}" style="display:block; margin-bottom:5px;">${trait}</span>
+                        <button onclick="toggleActions(${s.id}, this)" class="btn no-print" style="font-size: 0.75rem; background: #0d1117; border: 1px solid #3b82f6; color: #3b82f6; width: 100%;">📋 Plan d'action 🔽</button>
+                    </td>
                 `;
                 
+
                 if (json.user_role !== 'lecteur') {
-                    let btnHtml = `<a href="edit_scenario.php?id=${s.id}&from=master" class="btn" style="padding: 4px; font-size: 0.75rem; background: #30363d; display: block; margin-bottom: 5px; text-decoration:none; text-align:center;">✎ Éditer</a>`;
-                    if (json.user_role === 'admin') {
-                        btnHtml += `<button onclick="deleteScenario(${s.id})" class="btn" style="padding: 4px; font-size: 0.75rem; background: rgba(255,0,0,0.2); color: #ff4444; border:none; display: block; width:100%; cursor:pointer;">🗑️ Suppr.</button>`;
-                    }
-                    html += `<td class="no-print" style="vertical-align: middle;">${btnHtml}</td>`;
+                   let btnHtml = `<a href="edit_scenario.php?id=${s.id}&from=master" class="btn" style="padding: 6px; font-size: 0.8rem; background: #484f58; color: #ffffff; border: 1px solid #c9d1d9; display: block; margin-bottom: 8px; text-decoration:none; text-align:center; font-weight:bold; border-radius:4px;">✎ Éditer</a>`;
+                   if (json.user_role === 'admin') {
+                      btnHtml += `<button onclick="deleteScenario(${s.id})" class="btn" style="padding: 6px; font-size: 0.8rem; background: rgba(255,0,0,0.2); color: #ff4444; border: 1px solid #ff4444; display: block; width:100%; cursor:pointer; border-radius:4px;">🗑️ Suppr.</button>`;
+                   }
+                   html += `<td class="no-print" style="vertical-align: middle;">${btnHtml}</td>`;
                 }
 
                 tr.innerHTML = html;
                 tbody.appendChild(tr);
+
+                // --- LIGNE CACHÉE POUR LE PLAN D'ACTION ---
+                const trActions = document.createElement('tr');
+                trActions.id = `actions-row-${s.id}`;
+                trActions.style.display = 'none';
+                trActions.style.backgroundColor = '#0d1117';
+                trActions.innerHTML = `<td colspan="10" style="padding: 15px; border: 1px dashed #3b82f6;"><div id="actions-content-${s.id}">Chargement...</div></td>`;
+                tbody.appendChild(trActions);
             });
 
             applySortable();
         } catch (error) { showMsgReg("Erreur réseau.", true); }
     }
+
+    // --- LOGIQUE DU PLAN D'ACTION (Nouveau) ---
+
+    async function toggleActions(scenarioId, btn) {
+        const row = document.getElementById(`actions-row-${scenarioId}`);
+        const content = document.getElementById(`actions-content-${scenarioId}`);
+        
+        if (row.style.display === 'none') {
+            row.style.display = 'table-row';
+            btn.innerHTML = "📋 Fermer 🔼";
+            await loadActions(scenarioId, content);
+        } else {
+            row.style.display = 'none';
+            btn.innerHTML = "📋 Plan d'action 🔽";
+        }
+    }
+
+    async function loadActions(scenarioId, container) {
+        try {
+            const res = await fetch(`${apiActions}?scenario_id=${scenarioId}`);
+            const json = await res.json();
+            
+            let html = `<h4 style="color: #3b82f6; margin-top:0; margin-bottom: 10px;">Suivi des actions (PACS)</h4>`;
+            
+            if (json.data.length > 0) {
+                html += `<table style="width:100%; background: #161b22; margin-bottom: 15px;">
+                            <tr style="color: #8b949e; border-bottom: 1px solid #30363d;">
+                                <th style="text-align:left;">Action à réaliser</th>
+                                <th>Porteur</th>
+                                <th>Échéance</th>
+                                <th>Ticket</th>
+                                <th>Statut</th>
+                                ${json.user_role === 'admin' ? '<th>Sup.</th>' : ''}
+                            </tr>`;
+                json.data.forEach(act => {
+                    const statusColors = { 'a_faire': '#8b949e', 'en_cours': 'orange', 'fait': '#00ffcc', 'bloque': '#ff4d4d' };
+                    const statusLabels = { 'a_faire': 'À faire', 'en_cours': 'En cours', 'fait': 'Terminé', 'bloque': 'Bloqué' };
+                    const color = statusColors[act.statut];
+                    
+                    let statusSelect = `<select onchange="updateActionStatus(${act.id}, this.value, ${scenarioId})" style="background:#0d1117; color:${color}; border:1px solid ${color}; padding:2px; border-radius:4px;">
+                        <option value="a_faire" ${act.statut === 'a_faire' ? 'selected' : ''}>À faire</option>
+                        <option value="en_cours" ${act.statut === 'en_cours' ? 'selected' : ''}>En cours</option>
+                        <option value="fait" ${act.statut === 'fait' ? 'selected' : ''}>Terminé</option>
+                        <option value="bloque" ${act.statut === 'bloque' ? 'selected' : ''}>Bloqué</option>
+                    </select>`;
+
+                    let ticketLink = act.lien_ticket ? `<a href="${act.lien_ticket}" target="_blank" style="color:#3b82f6;">🔗 Lien</a>` : '-';
+                    
+                    html += `<tr>
+                        <td><strong>${act.titre}</strong></td>
+                        <td style="text-align:center;">${act.responsable || '-'}</td>
+                        <td style="text-align:center;">${act.date_cible || '-'}</td>
+                        <td style="text-align:center;">${ticketLink}</td>
+                        <td style="text-align:center;">${statusSelect}</td>
+                        ${json.user_role === 'admin' ? `<td style="text-align:center;"><button onclick="deleteAction(${act.id}, ${scenarioId})" style="background:none; border:none; color:#ff4d4d; cursor:pointer;">🗑️</button></td>` : ''}
+                    </tr>`;
+                });
+                html += `</table>`;
+            } else {
+                html += `<p style="color: #8b949e; font-style: italic; font-size: 0.9rem;">Aucune action définie pour le moment.</p>`;
+            }
+
+            // Formulaire d'ajout rapide (Sauf pour les lecteurs)
+            if (json.user_role !== 'lecteur') {
+                html += `
+                <div style="background: #21262d; padding: 10px; border-radius: 4px; display:flex; gap:10px; flex-wrap:wrap;">
+                    <input type="text" id="new-act-titre-${scenarioId}" placeholder="Nouvelle action (ex: Déployer MFA)" style="flex:2; padding:6px; background:#0d1117; color:#fff; border:1px solid #30363d; border-radius:4px;">
+                    <input type="text" id="new-act-resp-${scenarioId}" placeholder="Porteur (ex: DSI)" style="flex:1; padding:6px; background:#0d1117; color:#fff; border:1px solid #30363d; border-radius:4px;">
+                    <input type="date" id="new-act-date-${scenarioId}" style="flex:1; padding:6px; background:#0d1117; color:#fff; border:1px solid #30363d; border-radius:4px;">
+                    <input type="text" id="new-act-ticket-${scenarioId}" placeholder="URL Ticket Jira/GLPI" style="flex:1; padding:6px; background:#0d1117; color:#fff; border:1px solid #30363d; border-radius:4px;">
+                    <button onclick="addAction(${scenarioId})" class="btn btn-mj" style="padding:6px 12px; background:#3b82f6; border:none; color:white;">+ Ajouter</button>
+                </div>`;
+            }
+
+            container.innerHTML = html;
+        } catch (e) { container.innerHTML = "Erreur de chargement du plan d'action."; }
+    }
+
+    async function addAction(scenarioId) {
+        const payload = {
+            scenario_id: scenarioId,
+            titre: document.getElementById(`new-act-titre-${scenarioId}`).value,
+            responsable: document.getElementById(`new-act-resp-${scenarioId}`).value,
+            date_cible: document.getElementById(`new-act-date-${scenarioId}`).value,
+            lien_ticket: document.getElementById(`new-act-ticket-${scenarioId}`).value
+        };
+        if(!payload.titre) { alert("Le titre de l'action est obligatoire."); return; }
+
+        await fetch(apiActions, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload) });
+        loadActions(scenarioId, document.getElementById(`actions-content-${scenarioId}`)); // Rafraîchit juste ce bloc !
+    }
+
+    async function updateActionStatus(actionId, newStatus, scenarioId) {
+        await fetch(apiActions, { method: 'PATCH', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({action_id: actionId, statut: newStatus}) });
+        loadActions(scenarioId, document.getElementById(`actions-content-${scenarioId}`));
+    }
+
+    async function deleteAction(actionId, scenarioId) {
+        if(!confirm("Supprimer cette action ?")) return;
+        await fetch(apiActions, { method: 'DELETE', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({action_id: actionId}) });
+        loadActions(scenarioId, document.getElementById(`actions-content-${scenarioId}`));
+    }
+
+    // --- FIN LOGIQUE DU PLAN D'ACTION ---
 
     async function deleteScenario(id) {
         if (!confirm('Êtes-vous sûr de vouloir supprimer définitivement ce scénario ?')) return;
@@ -228,19 +343,25 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'MJ') { die("Accès refus
             let orderArray = savedOrder.split(',');
             orderArray.forEach(id => {
                 let row = tbody.querySelector(`tr[data-id="${id}"]`);
-                if (row) tbody.appendChild(row); 
+                if (row) {
+                    tbody.appendChild(row); 
+                    // Il faut aussi déplacer la ligne d'action associée juste en dessous !
+                    let actionRow = document.getElementById(`actions-row-${id}`);
+                    if(actionRow) tbody.appendChild(actionRow);
+                }
             });
         }
 
         if (sortableInstance) sortableInstance.destroy(); 
-        
         sortableInstance = Sortable.create(tbody, {
             handle: '.drag-handle',
             animation: 150,
             ghostClass: 'risk-medium',
+            draggable: ".main-row", // Ne rend déplaçable que la ligne principale, pas la ligne d'action
             onEnd: function () {
-                let newOrder = Array.from(tbody.querySelectorAll('tr[data-id]')).map(row => row.getAttribute('data-id'));
+                let newOrder = Array.from(tbody.querySelectorAll('tr.main-row')).map(row => row.getAttribute('data-id'));
                 localStorage.setItem('riskmapping_order', newOrder.join(','));
+                loadRegistre(); // On recharge pour réaligner proprement les sous-tableaux
             }
         });
     }

@@ -153,3 +153,18 @@ INSERT INTO menaces (type_source, motivation, niveau_capacite) VALUES
 ('Employé malveillant', 'Vengeance / Sabotage', 'Standard'),
 ('Concurrent déloyal', 'Espionnage industriel', 'Élevée'),
 ('Hacktiviste', 'Idéologie / Dégradation d''image', 'Modérée');
+
+-- =========================================================
+-- 6. SUIVI DES ACTIONS DE TRAITEMENT (PACS)
+-- =========================================================
+CREATE TABLE actions_traitement (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    scenario_id INT,
+    titre VARCHAR(255) NOT NULL,
+    responsable VARCHAR(100),
+    date_cible DATE NULL,
+    lien_ticket VARCHAR(255) NULL,
+    statut ENUM('a_faire', 'en_cours', 'fait', 'bloque') DEFAULT 'a_faire',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (scenario_id) REFERENCES scenarios_bruts(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
