@@ -1,0 +1,37 @@
+name: riskmapping-suite
+
+services:
+  web:
+    build: .
+    container_name: riskmapping_app
+    ports:
+      - "80:80"
+    volumes:
+      - ./src:/var/www/html
+    depends_on:
+      - db
+    networks:
+      - riskmapping_net
+
+  db:
+    image: mysql:8.0
+    container_name: riskmapping_db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password_to_change
+      MYSQL_DATABASE: riskmapping_db
+      MYSQL_USER: rm_admin
+      MYSQL_PASSWORD: rm_password
+    volumes:
+      - riskmapping_data:/var/lib/mysql
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - riskmapping_net
+
+volumes:
+  riskmapping_data:
+    name: riskmapping_volume
+
+networks:
+  riskmapping_net:
+    name: riskmapping_network
