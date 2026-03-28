@@ -53,7 +53,7 @@ try {
         exit;
     }
 
-    // --- PATCH : Mettre à jour le statut d'une action ---
+    // --- PATCH : Mettre à jour uniquement le statut ---
     elseif ($method === 'PATCH') {
         if ($admin_role === 'lecteur') {
             echo json_encode(["status" => "error", "message" => "Droits insuffisants."]); exit;
@@ -69,6 +69,31 @@ try {
         } else {
             echo json_encode(["status" => "error", "message" => "Données invalides."]);
         }
+        exit;
+    }
+
+    // --- PUT : Mettre à jour une action complète (Édition) ---
+    elseif ($method === 'PUT') {
+        if ($admin_role === 'lecteur') {
+            echo json_encode(["status" => "error", "message" => "Droits insuffisants."]); exit;
+        }
+
+        $input = json_decode(file_get_contents('php://input'), true);
+        $action_id = (int)($input['action_id'] ?? 0);
+        $titre = trim($input['titre'] ?? '');
+        $responsable = trim($input['responsable'] ?? '');
+        $date_cible = !empty($input['date_cible']) ? $input['date_cible'] : null;
+        $lien_ticket = trim($input['lien_ticket'] ?? '');
+
+        if ($action_id <= 0 || empty($titre)) {
+            echo json_encode(["status" => "error", "message" => "Données invalides pour la mise à jour."]); exit;
+        }
+
+        $stmt = $pdo->prepare("UPDATE actions_traitement SET titre = ?, responsable = ?, date_cible = ?, lien_ticket = ? WHERE id = ?");
+        $stmt->execute([$titre, $responsable, $date_cible, $lien_ticket, $action_id]);
+        
+        log_audit($pdo, $_SESSION['admin_id'], 'ACTION_UPDATED', "Modification de l'action #$action_id : $titre");
+        echo json_encode(["status" => "success", "message" => "Action mise à jour avec succès."]);
         exit;
     }
 

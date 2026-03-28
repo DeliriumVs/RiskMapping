@@ -5,10 +5,15 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'MJ') { die("Accès refus
 ?>
 
 <style>
+    /* ========================================= */
+    /* STYLES ÉCRAN (WEB)                        */
+    /* ========================================= */
     .heatmap-wrapper { display: flex; flex-direction: column; align-items: center; margin: 40px 0; padding: 20px; background: #161b22; border-radius: 8px; border: 1px solid #30363d; }
     .heatmap-core { display: flex; align-items: stretch; }
     .heatmap-y-axis { display: flex; flex-direction: column; justify-content: space-around; padding-right: 15px; text-align: right; color: #8b949e; font-size: 0.85rem; font-weight: bold; }
-    .heatmap-grid { display: grid; grid-template-columns: repeat(4, 1fr); grid-template-rows: repeat(4, 1fr); width: 600px; height: 400px; gap: 4px; background: #30363d; border: 4px solid #30363d; border-radius: 4px;}
+    
+    /* Grille propre, le background sert de couleur de ligne via le gap */
+    .heatmap-grid { display: grid; grid-template-columns: repeat(4, 1fr); grid-template-rows: repeat(4, 1fr); width: 600px; height: 400px; gap: 2px; background: #30363d; border: 2px solid #30363d; border-radius: 4px;}
     .heatmap-cell { display: flex; flex-wrap: wrap; align-content: flex-start; gap: 4px; padding: 8px; overflow: hidden; }
     .heatmap-x-axis { display: grid; grid-template-columns: repeat(4, 1fr); width: 600px; padding-top: 15px; text-align: center; color: #8b949e; font-size: 0.85rem; font-weight: bold; margin-left: 90px; }
     
@@ -38,19 +43,73 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'MJ') { die("Accès refus
     .trait-Éviter { border-left: 3px solid var(--accent-red); }
     .trait-Accepter { border-left: 3px solid orange; }
 
+    /* ========================================= */
+    /* RÈGLES D'IMPRESSION PDF                   */
+    /* ========================================= */
     @media print {
-        .heatmap-wrapper { border: none !important; background: transparent !important; margin: 10px 0 !important; padding: 0 !important; page-break-inside: avoid; }
-        .heatmap-grid { border: 2px solid #000 !important; background: #000 !important; gap: 2px !important; }
+        @page { size: A3 landscape; margin: 15mm; }
+
+        body, .container { background-color: #ffffff !important; }
+
+        /* Nettoyage du conteneur de la Heatmap */
+        .heatmap-wrapper { border: none !important; background: transparent !important; margin: 0 auto !important; padding: 0 !important; page-break-inside: avoid; }
+        
+        /* Agrandissement de la Heatmap et traits noirs simples */
+        .heatmap-grid { 
+            width: 900px !important; 
+            height: 550px !important; 
+            border: 2px solid #000 !important; 
+            background: #000 !important; 
+            gap: 2px !important; /* C'est ce gap qui crée les lignes noires parfaites */
+        }
+        .heatmap-x-axis { width: 900px !important; margin-left: 90px !important; font-size: 1rem !important; }
+        .heatmap-y-axis { font-size: 1rem !important; }
+        .heatmap-cell { padding: 15px !important; } /* Aère les points de risque */
+        
+        /* Forcer les polices de la heatmap en Noir/Gris Foncé */
+        .heatmap-wrapper h2 { color: #000 !important; font-size: 1.8rem !important; margin-bottom: 20px !important;}
+        .heatmap-y-axis, .heatmap-x-axis { color: #000 !important; }
+        .heatmap-y-axis span, .heatmap-x-axis span { color: #333 !important; }
+        /* "Gravité" */
+        .heatmap-wrapper > div > div:first-child { color: #000 !important; font-size: 1.2rem !important; font-weight: bold !important; }
+        /* "Vraisemblance" */
+        .heatmap-wrapper > div:last-child { color: #000 !important; font-size: 1.2rem !important; font-weight: bold !important; margin-top: 15px !important;}
+
+        /* Couleurs des quadrants for l'impression */
         .bg-critical { background-color: #ff4d4d !important; }
         .bg-high { background-color: #ff9999 !important; }
         .bg-medium { background-color: #ffcc99 !important; }
         .bg-low { background-color: #99ffcc !important; }
-        .risk-dot { background: #000 !important; color: #fff !important; border: 1px solid #fff !important; font-weight: bold !important; box-shadow: none !important; }
-        table { border-collapse: collapse !important; width: 100% !important; border: 2px solid #000 !important; margin-top: 10px !important; }
+        
+        .risk-dot { width: 32px !important; height: 32px !important; font-size: 0.9rem !important; background: #000 !important; color: #fff !important; border: 1px solid #fff !important; font-weight: bold !important; box-shadow: none !important; }
+        
+        /* FORCER LE SAUT DE PAGE AVANT LE TABLEAU */
+        .page-break-before { page-break-before: always !important; break-before: page !important; margin-top: 0 !important; padding-top: 20px !important; }
+
+        table { border-collapse: collapse !important; width: 100% !important; border: 2px solid #000 !important; margin-top: 10px !important; background-color: #ffffff !important; }
         th { background: #e2e8f0 !important; color: #000 !important; border: 1px solid #000 !important; padding: 10px !important;}
-        td { border: 1px solid #000 !important; color: #000 !important; background: #fff !important; padding: 8px !important; page-break-inside: avoid; }
+        td { border: 1px solid #000 !important; color: #000 !important; background-color: #ffffff !important; padding: 8px !important; page-break-inside: avoid; }
         .badge-risk { border: 1px solid #000 !important; }
         .badge-traitement { background-color: #f1f5f9 !important; color: #000 !important; border: 1px solid #cbd5e1 !important; font-weight: bold; }
+
+        .print-title-dark { color: #000000 !important; }
+
+        /* PACS: fond blanc radical */
+        tr.action-row-container, 
+        tr.action-row-container td, 
+        td.action-content-wrapper,
+        div[id^="actions-content-"] { 
+            background-color: #ffffff !important; 
+            background: #ffffff !important; 
+            border: none !important; 
+            box-shadow: none !important;
+        }
+
+        table.action-table { background-color: #ffffff !important; margin: 10px auto 20px auto !important; border: 2px solid #000 !important; width: 95% !important; }
+        table.action-table th { background-color: #f8fafc !important; color: #000 !important; font-size: 0.75rem !important; padding: 6px !important; border: 1px solid #000 !important; }
+        table.action-table td { background-color: #ffffff !important; color: #000 !important; font-size: 0.75rem !important; padding: 6px !important; border: 1px solid #000 !important; }
+        
+        .action-table select { -webkit-appearance: none; -moz-appearance: none; appearance: none; border: none !important; background: transparent !important; color: #000 !important; font-weight: bold; padding: 0 !important; font-size: 0.75rem !important; }
     }
 </style>
 
@@ -84,9 +143,12 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'MJ') { die("Accès refus
     <div style="color: #c9d1d9; font-weight: bold; font-size: 1.1rem; margin-top: 15px; margin-left: 80px;">Vraisemblance</div>
 </div>
 
-<div style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: 30px; margin-bottom: 10px;">
-    <h3 style="color: var(--accent-green); margin: 0;">Plan d'Action / Risques Traités</h3>
-    <button onclick="resetOrder()" class="btn no-print" style="background: transparent; border: 1px solid #8b949e; color: #8b949e; padding: 5px 10px; font-size: 0.8rem;">🔄 Réinitialiser le tri</button>
+<div class="page-break-before" style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: 30px; margin-bottom: 10px;">
+    <h3 class="print-title-dark" style="color: var(--accent-green); margin: 0;">Plan d'Action / Risques Traités</h3>
+    <div style="display: flex; gap: 10px;">
+        <button id="btn-toggle-all" onclick="toggleAllActions()" class="btn no-print" style="background: #3b82f6; border: none; color: #fff; padding: 5px 10px; font-size: 0.8rem; border-radius: 4px; cursor: pointer;">📂 Tout déplier</button>
+        <button onclick="resetOrder()" class="btn no-print" style="background: transparent; border: 1px solid #8b949e; color: #8b949e; padding: 5px 10px; font-size: 0.8rem; border-radius: 4px; cursor: pointer;">🔄 Réinitialiser le tri</button>
+    </div>
 </div>
 
 <div style="overflow-x: auto;">
@@ -103,8 +165,9 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'MJ') { die("Accès refus
 
 <script>
     var apiRegistre = 'api_registre.php';
-    var apiActions = 'api_actions.php'; // Nouvelle API
+    var apiActions = 'api_actions.php'; 
     var sortableInstance = null;
+    var allExpanded = false; // État pour le bouton "Tout déplier"
 
     function showMsgReg(text, isError = false) {
         const box = document.getElementById('api-message-registre');
@@ -192,36 +255,73 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'MJ') { die("Accès refus
                     <td style="text-align: center;"><span class="badge-risk ${c_mult}">${prio}</span></td>
                     <td style="text-align: center;">
                         <span class="badge-traitement ${c_trait}" style="display:block; margin-bottom:5px;">${trait}</span>
-                        <button onclick="toggleActions(${s.id}, this)" class="btn no-print" style="font-size: 0.75rem; background: #0d1117; border: 1px solid #3b82f6; color: #3b82f6; width: 100%;">📋 Plan d'action 🔽</button>
+                        <button id="btn-toggle-${s.id}" onclick="toggleActions(${s.id}, this)" class="btn no-print" style="font-size: 0.75rem; background: #0d1117; border: 1px solid #3b82f6; color: #3b82f6; width: 100%; cursor: pointer;">📋 Plan d'action 🔽</button>
                     </td>
                 `;
                 
-
                 if (json.user_role !== 'lecteur') {
-                   let btnHtml = `<a href="edit_scenario.php?id=${s.id}&from=master" class="btn" style="padding: 6px; font-size: 0.8rem; background: #484f58; color: #ffffff; border: 1px solid #c9d1d9; display: block; margin-bottom: 8px; text-decoration:none; text-align:center; font-weight:bold; border-radius:4px;">✎ Éditer</a>`;
-                   if (json.user_role === 'admin') {
-                      btnHtml += `<button onclick="deleteScenario(${s.id})" class="btn" style="padding: 6px; font-size: 0.8rem; background: rgba(255,0,0,0.2); color: #ff4444; border: 1px solid #ff4444; display: block; width:100%; cursor:pointer; border-radius:4px;">🗑️ Suppr.</button>`;
-                   }
-                   html += `<td class="no-print" style="vertical-align: middle;">${btnHtml}</td>`;
+                    let btnHtml = `<a href="edit_scenario.php?id=${s.id}&from=master" class="btn" style="padding: 6px; font-size: 0.8rem; background: #484f58; color: #ffffff; border: 1px solid #c9d1d9; display: block; margin-bottom: 8px; text-decoration:none; text-align:center; font-weight:bold; border-radius:4px;">✎ Éditer</a>`;
+                    if (json.user_role === 'admin') {
+                        btnHtml += `<button onclick="deleteScenario(${s.id})" class="btn" style="padding: 6px; font-size: 0.8rem; background: rgba(255,0,0,0.2); color: #ff4444; border: 1px solid #ff4444; display: block; width:100%; cursor:pointer; border-radius:4px;">🗑️ Suppr.</button>`;
+                    }
+                    html += `<td class="no-print" style="vertical-align: middle;">${btnHtml}</td>`;
                 }
 
                 tr.innerHTML = html;
                 tbody.appendChild(tr);
 
-                // --- LIGNE CACHÉE POUR LE PLAN D'ACTION ---
                 const trActions = document.createElement('tr');
                 trActions.id = `actions-row-${s.id}`;
+                trActions.className = 'action-row-container';
                 trActions.style.display = 'none';
-                trActions.style.backgroundColor = '#0d1117';
-                trActions.innerHTML = `<td colspan="10" style="padding: 15px; border: 1px dashed #3b82f6;"><div id="actions-content-${s.id}">Chargement...</div></td>`;
+                trActions.style.backgroundColor = '#0d1117'; 
+                trActions.innerHTML = `<td colspan="10" class="action-content-wrapper" style="padding: 15px; border: 1px dashed #3b82f6;"><div id="actions-content-${s.id}">Chargement...</div></td>`;
                 tbody.appendChild(trActions);
             });
 
             applySortable();
+            
+            // Remise à zéro de l'état "Tout déplier" au chargement
+            allExpanded = false;
+            document.getElementById('btn-toggle-all').innerHTML = "📂 Tout déplier";
+
         } catch (error) { showMsgReg("Erreur réseau.", true); }
     }
 
-    // --- LOGIQUE DU PLAN D'ACTION (Nouveau) ---
+    // --- NOUVEAU : Fonction "Tout déplier/replier" ---
+    async function toggleAllActions() {
+        const rows = document.querySelectorAll('.main-row');
+        const btnAll = document.getElementById('btn-toggle-all');
+        
+        allExpanded = !allExpanded;
+        btnAll.innerHTML = "⏳ Chargement...";
+        btnAll.disabled = true;
+
+        const promises = [];
+
+        for (let row of rows) {
+            const id = row.getAttribute('data-id');
+            const actionRow = document.getElementById(`actions-row-${id}`);
+            const content = document.getElementById(`actions-content-${id}`);
+            const toggleBtn = document.getElementById(`btn-toggle-${id}`);
+            
+            if (allExpanded && actionRow.style.display === 'none') {
+                actionRow.style.display = 'table-row';
+                if(toggleBtn) toggleBtn.innerHTML = "📋 Fermer 🔼";
+                promises.push(loadActions(id, content));
+            } else if (!allExpanded && actionRow.style.display !== 'none') {
+                actionRow.style.display = 'none';
+                if(toggleBtn) toggleBtn.innerHTML = "📋 Plan d'action 🔽";
+            }
+        }
+
+        if (promises.length > 0) {
+            await Promise.all(promises); // Exécute les appels API en parallèle
+        }
+
+        btnAll.innerHTML = allExpanded ? "📂 Tout replier" : "📂 Tout déplier";
+        btnAll.disabled = false;
+    }
 
     async function toggleActions(scenarioId, btn) {
         const row = document.getElementById(`actions-row-${scenarioId}`);
@@ -242,21 +342,20 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'MJ') { die("Accès refus
             const res = await fetch(`${apiActions}?scenario_id=${scenarioId}`);
             const json = await res.json();
             
-            let html = `<h4 style="color: #3b82f6; margin-top:0; margin-bottom: 10px;">Suivi des actions (PACS)</h4>`;
+            let html = `<h4 class="no-print print-title-dark" style="color: #3b82f6; margin-top:0; margin-bottom: 10px;">Suivi des actions (PACS)</h4>`;
             
             if (json.data.length > 0) {
-                html += `<table style="width:100%; background: #161b22; margin-bottom: 15px;">
+                html += `<table class="action-table" style="width:100%; background: #161b22; margin-bottom: 15px;">
                             <tr style="color: #8b949e; border-bottom: 1px solid #30363d;">
                                 <th style="text-align:left;">Action à réaliser</th>
                                 <th>Porteur</th>
                                 <th>Échéance</th>
                                 <th>Ticket</th>
                                 <th>Statut</th>
-                                ${json.user_role === 'admin' ? '<th>Sup.</th>' : ''}
+                                ${json.user_role === 'admin' ? '<th class="no-print">Actions</th>' : ''}
                             </tr>`;
                 json.data.forEach(act => {
                     const statusColors = { 'a_faire': '#8b949e', 'en_cours': 'orange', 'fait': '#00ffcc', 'bloque': '#ff4d4d' };
-                    const statusLabels = { 'a_faire': 'À faire', 'en_cours': 'En cours', 'fait': 'Terminé', 'bloque': 'Bloqué' };
                     const color = statusColors[act.statut];
                     
                     let statusSelect = `<select onchange="updateActionStatus(${act.id}, this.value, ${scenarioId})" style="background:#0d1117; color:${color}; border:1px solid ${color}; padding:2px; border-radius:4px;">
@@ -266,7 +365,16 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'MJ') { die("Accès refus
                         <option value="bloque" ${act.statut === 'bloque' ? 'selected' : ''}>Bloqué</option>
                     </select>`;
 
-                    let ticketLink = act.lien_ticket ? `<a href="${act.lien_ticket}" target="_blank" style="color:#3b82f6;">🔗 Lien</a>` : '-';
+                    let ticketLink = '-';
+                    if (act.lien_ticket) {
+                        if (act.lien_ticket.startsWith('http://') || act.lien_ticket.startsWith('https://')) {
+                            ticketLink = `<a href="${act.lien_ticket}" target="_blank" style="color:#3b82f6;" title="${act.lien_ticket}">🔗 Lien</a>`;
+                        } else {
+                            ticketLink = `<span style="color:#c9d1d9;">${act.lien_ticket}</span>`;
+                        }
+                    }
+                    
+                    const safeTitre = act.titre.replace(/"/g, '&quot;');
                     
                     html += `<tr>
                         <td><strong>${act.titre}</strong></td>
@@ -274,7 +382,11 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'MJ') { die("Accès refus
                         <td style="text-align:center;">${act.date_cible || '-'}</td>
                         <td style="text-align:center;">${ticketLink}</td>
                         <td style="text-align:center;">${statusSelect}</td>
-                        ${json.user_role === 'admin' ? `<td style="text-align:center;"><button onclick="deleteAction(${act.id}, ${scenarioId})" style="background:none; border:none; color:#ff4d4d; cursor:pointer;">🗑️</button></td>` : ''}
+                        ${json.user_role === 'admin' ? `
+                        <td class="no-print" style="text-align:center; white-space:nowrap;">
+                            <button onclick="prepareEditAction(this, ${scenarioId})" data-id="${act.id}" data-titre="${safeTitre}" data-resp="${act.responsable || ''}" data-date="${act.date_cible || ''}" data-link="${act.lien_ticket || ''}" style="background:none; border:none; color:#3b82f6; cursor:pointer; margin-right:8px;" title="Modifier l'action">✎</button>
+                            <button onclick="deleteAction(${act.id}, ${scenarioId})" style="background:none; border:none; color:#ff4d4d; cursor:pointer;" title="Supprimer l'action">🗑️</button>
+                        </td>` : ''}
                     </tr>`;
                 });
                 html += `</table>`;
@@ -282,15 +394,16 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'MJ') { die("Accès refus
                 html += `<p style="color: #8b949e; font-style: italic; font-size: 0.9rem;">Aucune action définie pour le moment.</p>`;
             }
 
-            // Formulaire d'ajout rapide (Sauf pour les lecteurs)
             if (json.user_role !== 'lecteur') {
                 html += `
-                <div style="background: #21262d; padding: 10px; border-radius: 4px; display:flex; gap:10px; flex-wrap:wrap;">
-                    <input type="text" id="new-act-titre-${scenarioId}" placeholder="Nouvelle action (ex: Déployer MFA)" style="flex:2; padding:6px; background:#0d1117; color:#fff; border:1px solid #30363d; border-radius:4px;">
+                <div class="no-print" style="background: #21262d; padding: 10px; border-radius: 4px; display:flex; gap:10px; flex-wrap:wrap;">
+                    <input type="text" id="new-act-titre-${scenarioId}" placeholder="Action (ex: Déployer MFA)" style="flex:2; padding:6px; background:#0d1117; color:#fff; border:1px solid #30363d; border-radius:4px;">
                     <input type="text" id="new-act-resp-${scenarioId}" placeholder="Porteur (ex: DSI)" style="flex:1; padding:6px; background:#0d1117; color:#fff; border:1px solid #30363d; border-radius:4px;">
                     <input type="date" id="new-act-date-${scenarioId}" style="flex:1; padding:6px; background:#0d1117; color:#fff; border:1px solid #30363d; border-radius:4px;">
-                    <input type="text" id="new-act-ticket-${scenarioId}" placeholder="URL Ticket Jira/GLPI" style="flex:1; padding:6px; background:#0d1117; color:#fff; border:1px solid #30363d; border-radius:4px;">
-                    <button onclick="addAction(${scenarioId})" class="btn btn-mj" style="padding:6px 12px; background:#3b82f6; border:none; color:white;">+ Ajouter</button>
+                    <input type="text" id="new-act-ticket-${scenarioId}" placeholder="Lien/Ticket" style="flex:1; padding:6px; background:#0d1117; color:#fff; border:1px solid #30363d; border-radius:4px;">
+                    
+                    <button id="btn-save-act-${scenarioId}" data-action-id="" onclick="saveAction(${scenarioId})" class="btn btn-mj" style="padding:6px 12px; background:#3b82f6; border:none; color:white; border-radius:4px; transition:0.2s;">+ Ajouter</button>
+                    <button id="btn-cancel-act-${scenarioId}" onclick="cancelEditAction(${scenarioId})" class="btn" style="padding:6px 12px; background:#484f58; border:none; color:white; display:none; border-radius:4px;">Annuler</button>
                 </div>`;
             }
 
@@ -298,9 +411,42 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'MJ') { die("Accès refus
         } catch (e) { container.innerHTML = "Erreur de chargement du plan d'action."; }
     }
 
-    async function addAction(scenarioId) {
+    function prepareEditAction(btn, scenarioId) {
+        document.getElementById(`new-act-titre-${scenarioId}`).value = btn.dataset.titre;
+        document.getElementById(`new-act-resp-${scenarioId}`).value = btn.dataset.resp;
+        document.getElementById(`new-act-date-${scenarioId}`).value = btn.dataset.date;
+        document.getElementById(`new-act-ticket-${scenarioId}`).value = btn.dataset.link;
+        
+        const saveBtn = document.getElementById(`btn-save-act-${scenarioId}`);
+        saveBtn.dataset.actionId = btn.dataset.id; 
+        saveBtn.innerHTML = "💾 Modifier";
+        saveBtn.style.background = "var(--accent-green)";
+        saveBtn.style.color = "#000";
+
+        document.getElementById(`btn-cancel-act-${scenarioId}`).style.display = 'inline-block';
+    }
+
+    function cancelEditAction(scenarioId) {
+        document.getElementById(`new-act-titre-${scenarioId}`).value = '';
+        document.getElementById(`new-act-resp-${scenarioId}`).value = '';
+        document.getElementById(`new-act-date-${scenarioId}`).value = '';
+        document.getElementById(`new-act-ticket-${scenarioId}`).value = '';
+        
+        const saveBtn = document.getElementById(`btn-save-act-${scenarioId}`);
+        saveBtn.dataset.actionId = '';
+        saveBtn.innerHTML = "+ Ajouter";
+        saveBtn.style.background = "#3b82f6";
+        saveBtn.style.color = "#fff";
+
+        document.getElementById(`btn-cancel-act-${scenarioId}`).style.display = 'none';
+    }
+
+    async function saveAction(scenarioId) {
+        const actionId = document.getElementById(`btn-save-act-${scenarioId}`).dataset.actionId;
+        
         const payload = {
             scenario_id: scenarioId,
+            action_id: actionId ? parseInt(actionId) : null,
             titre: document.getElementById(`new-act-titre-${scenarioId}`).value,
             responsable: document.getElementById(`new-act-resp-${scenarioId}`).value,
             date_cible: document.getElementById(`new-act-date-${scenarioId}`).value,
@@ -308,8 +454,13 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'MJ') { die("Accès refus
         };
         if(!payload.titre) { alert("Le titre de l'action est obligatoire."); return; }
 
-        await fetch(apiActions, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload) });
-        loadActions(scenarioId, document.getElementById(`actions-content-${scenarioId}`)); // Rafraîchit juste ce bloc !
+        if (actionId) {
+            await fetch(apiActions, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload) });
+        } else {
+            await fetch(apiActions, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload) });
+        }
+        
+        loadActions(scenarioId, document.getElementById(`actions-content-${scenarioId}`)); 
     }
 
     async function updateActionStatus(actionId, newStatus, scenarioId) {
@@ -322,8 +473,6 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'MJ') { die("Accès refus
         await fetch(apiActions, { method: 'DELETE', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({action_id: actionId}) });
         loadActions(scenarioId, document.getElementById(`actions-content-${scenarioId}`));
     }
-
-    // --- FIN LOGIQUE DU PLAN D'ACTION ---
 
     async function deleteScenario(id) {
         if (!confirm('Êtes-vous sûr de vouloir supprimer définitivement ce scénario ?')) return;
@@ -345,7 +494,6 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'MJ') { die("Accès refus
                 let row = tbody.querySelector(`tr[data-id="${id}"]`);
                 if (row) {
                     tbody.appendChild(row); 
-                    // Il faut aussi déplacer la ligne d'action associée juste en dessous !
                     let actionRow = document.getElementById(`actions-row-${id}`);
                     if(actionRow) tbody.appendChild(actionRow);
                 }
@@ -357,11 +505,11 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'MJ') { die("Accès refus
             handle: '.drag-handle',
             animation: 150,
             ghostClass: 'risk-medium',
-            draggable: ".main-row", // Ne rend déplaçable que la ligne principale, pas la ligne d'action
+            draggable: ".main-row", 
             onEnd: function () {
                 let newOrder = Array.from(tbody.querySelectorAll('tr.main-row')).map(row => row.getAttribute('data-id'));
                 localStorage.setItem('riskmapping_order', newOrder.join(','));
-                loadRegistre(); // On recharge pour réaligner proprement les sous-tableaux
+                loadRegistre(); 
             }
         });
     }

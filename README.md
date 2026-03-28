@@ -1,95 +1,66 @@
 # 🧭 RiskMapping Suite
 
-**RiskMapping** est une application web d'animation d'ateliers d'analyse de risques collaboratifs, inspirée de la méthodologie **EBIOS RM** (ANSSI). 
+**RiskMapping Suite** est une plateforme open-source de pilotage des risques cyber et d'amélioration continue, structurée autour de la méthodologie **EBIOS RM** (ANSSI).
 
-Conçue pour les facilitateurs et les équipes cybersécurité, elle permet de transformer l'identification et la cotation des risques en une expérience interactive, fluide et parfaitement tracée.
+Pensée pour les RSSI, les qualiticiens et les équipes cybersécurité, elle permet de centraliser le registre des risques, de cartographier l'exposition de l'entreprise, et de piloter le **Plan d'Action Continu de Sécurité (PACS)**.
 
-![Version](https://img.shields.io/badge/version-1.0-blue.svg)
-![Architecture](https://img.shields.io/badge/architecture-API_REST-success.svg)
+![Version](https://img.shields.io/badge/version-1.1-blue.svg)
+![Methodology](https://img.shields.io/badge/methodology-EBIOS_RM-success.svg)
 ![Security](https://img.shields.io/badge/security-Enterprise_Grade-red.svg)
 
 ## ✨ Fonctionnalités Principales
 
-### 🎯 Pour les Participants (Mode Atelier)
-* **Idéation Guidée :** Création de scénarios de risques ("cauchemars") avec une approche narrative (Événement redouté + Conséquences).
-* **Cadrage EBIOS (Optionnel) :** Liaison multi-critères aux Valeurs Métier (Disponibilité, Confidentialité, etc.) et aux Sources de Menaces via une interface intuitive.
-* **Poker du Risque :** Évaluation secrète et en temps réel de la Gravité et de la Vraisemblance depuis un smartphone ou un PC.
+### 📊 Pilotage et Amélioration Continue (GRC)
+* **Registre Dynamique :** Centralisation des risques traités, évaluation de la gravité/vraisemblance et calcul automatique des niveaux de criticité.
+* **Cartographie (Heatmap) :** Matrice visuelle de l'exposition aux risques (séparée en quadrants classiques) générée en temps réel.
+* **Plan de Traitement (PACS) :** Sous chaque risque, un module complet de gestion de projet permet de décliner la stratégie (Réduire, Transférer...) en actions opérationnelles :
+  * Assignation de porteurs (Responsables).
+  * Suivi des échéances et statuts (À faire, En cours, Bloqué, Terminé).
+  * Intégration fluide avec les outils IT existants via des liens directs vers vos tickets (Jira, ServiceNow, GLPI...).
+* **Reporting Exécutif :** Génération de rapports PDF propres et formatés pour l'impression (mode paysage, saut de page, nettoyage visuel), idéaux pour les comités de direction (CODIR).
 
-### 🛡️ Pour l'Équipe Sécurité (Mode Expert)
-* **Single Page Application (SPA) :** Tableau de bord dynamique, navigation et gestion des données sans aucun rechargement de page.
-* **Heatmap & Registre :** Visualisation matricielle des risques, tri drag-and-drop, calcul automatique de la criticité et suivi des plans de traitement.
-* **Animation en direct :** Gestion du timer de débat, prise de notes à la volée, déclenchement et clôture forcée des votes.
-* **Gestion des Référentiels :** Catalogues administrables pour les Valeurs Métier, les Menaces et les Équipes de l'entreprise.
-* **Exports Professionnels :** Génération de rapports PDF (formatage d'impression dédié) et extraction CSV.
+### 🎯 Ateliers d'Identification (Module Participatif)
+La plateforme intègre un module de gamification pour faciliter l'identification initiale des risques avec les métiers :
+* **Idéation Guidée :** Création de scénarios ("cauchemars") liés aux valeurs métiers (DICP) et aux sources de menaces de l'entreprise.
+* **Poker du Risque :** Évaluation de la gravité en groupe via un système de débat suivi d'un vote secret (Scrum) sur smartphone ou PC.
 
-### 🔒 Sécurité & Conformité (Enterprise-Grade)
-* **RBAC (Role-Based Access Control) strict :**
-  * `Admin` : Accès total (Comptes, Audit, Référentiels, Ateliers).
-  * `Animateur` : Pilotage des ateliers et gestion du registre des risques.
-  * `Lecteur` : Consultation seule (Read-only).
-* **Provisioning & Self-Service :** Formulaire de demande d'accès avec mise en attente (quarantaine) et validation manuelle par un administrateur.
-* **Cryptographie robuste :** Hachage des mots de passe via l'algorithme **Argon2id** (Standard ANSSI/OWASP) et politique de complexité stricte.
-* **Piste d'Audit (Audit Trail) :** Journalisation systématique en base de données de toutes les actions sensibles (Connexions, ajouts, suppressions) avec horodatage, ID utilisateur et adresse IP.
-
----
-
-## 🛠️ Stack Technique & Architecture
-
-L'application repose sur une architecture moderne de type **API-First** (séparation stricte du Front-end et du Back-end) :
-
-* **Backend (API REST) :** PHP 8 (Vanilla, PDO). Les points de terminaison (`/api_*.php`) sécurisent les transactions et distribuent les données au format JSON.
-* **Base de données :** MySQL 8 (InnoDB, relationnel Many-to-Many, encodage `utf8mb4_unicode_ci`).
-* **Frontend (SPA) :** HTML5, CSS3, JavaScript Vanilla (utilisation de la `Fetch API` moderne pour la consommation de l'API REST).
-* **Déploiement :** Docker & Docker Compose (Conteneurisation complète).
+### 🛡️ Sécurité & Gouvernance (Enterprise-Grade)
+* **Piste d'Audit (Audit Trail) :** Traçabilité totale. Toutes les actions sensibles (élévation de privilèges, créations, suppressions, modifications) sont journalisées et horodatées.
+* **RBAC Strict :** Séparation des rôles hermétique (`Admin`, `Animateur`, `Lecteur`).
+* **Provisioning :** Quarantaine des nouveaux inscrits avec validation manuelle par l'administrateur.
+* **Standard ANSSI :** Protection des accès par algorithme de hachage **Argon2id**.
 
 ---
 
-## 🚀 Installation & Déploiement
+## 🛠️ Architecture & Déploiement
 
-L'application est entièrement conteneurisée pour un déploiement immédiat.
+RiskMapping Suite est construite pour être robuste, portable et sécurisée (approche *DevSecOps*).
+Elle repose sur une architecture **API-First** (Single Page Application consommant une API REST) et est intégralement conteneurisée.
 
 ### Prérequis
-* Docker & Docker Compose installés sur le serveur hôte.
+* Docker & Docker Compose
 
-### Démarrage
+### Démarrage rapide
 1. Clonez ce dépôt.
-2. Ouvrez un terminal à la racine du projet (où se trouve le fichier `docker-compose.yml`).
-3. Lancez le build et le montage des conteneurs :
+2. Démarrez l'infrastructure via Docker :
    ```bash
    docker compose up -d
    ```
-4. Accédez à l'application via votre navigateur : `http://localhost` (ou l'IP/Domaine de votre serveur).
+3. Accédez à l'application via votre navigateur : `http://localhost` (ou l'IP de votre serveur).
 
-### ⚠️ Premier accès Administrateur
-Lors du tout premier lancement, l'application génère automatiquement un compte super-administrateur de secours :
+### ⚠️ Premier accès
+Lors du premier lancement, un compte administrateur de secours est provisionné :
 * **Identifiant :** `admin`
 * **Mot de passe :** `EBIOSRM`
 
-> **Action requise :** Connectez-vous immédiatement, rendez-vous dans l'onglet "Comptes", créez votre propre accès Administrateur nominatif, puis **verrouillez ou supprimez** le compte par défaut.
+> **Action requise :** Connectez-vous, rendez-vous dans l'onglet "Comptes", créez votre propre accès Administrateur nominatif, puis **verrouillez ou supprimez** le compte par défaut.
 
 ---
 
-## 📂 Structure du projet
+## 🧹 Maintenance & Sauvegarde
 
-```text
-/
-├── docker-compose.yml       # Configuration de l'infrastructure
-├── Dockerfile               # Recette de l'image PHP/Apache
-├── init.sql                 # Schéma de base de données (Déployé au 1er lancement)
-└── src/                     # Code source de l'application
-    ├── api_*.php            # Contrôleurs Backend (API REST renvoyant du JSON)
-    ├── view_*.php           # Vues Frontend (Single Page Application)
-    ├── admin_*.php          # Interfaces d'administration et référentiels
-    ├── mj_*.php             # Modules d'animation de session (Maitre du Jeu)
-    ├── db.php               # Moteur de BDD et fonction globale d'Audit (log_audit)
-    └── index.php            # Point d'entrée public
-```
-
----
-
-## 🧹 Maintenance
-
-Pour réinitialiser complètement l'application (⚠️ **Attention, cela efface toutes les bases de données, comptes et configurations d'audit**) :
+L'application stocke ses données de manière persistante via un volume Docker.
+Pour une remise à zéro complète (⚠️ **Attention : efface le registre, le PACS et l'audit**) :
 ```bash
 docker compose down -v
 docker compose up -d
