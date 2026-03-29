@@ -76,7 +76,7 @@ $participants = $list_participants->fetchAll();
                 <div class="stat-number"><?= $nb_participants ?></div>
             </div>
             <div class="stat-box" style="border-color: var(--accent-red);">
-                <div>Cauchemars soumis</div>
+                <div>Scénarios proposés</div>
                 <div class="stat-number" style="color: var(--accent-red);"><?= $nb_scenarios ?></div>
             </div>
         </div>
