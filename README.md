@@ -22,6 +22,7 @@ Pensée pour les RSSI, les qualiticiens et les équipes cybersécurité, elle pe
 <p align="center">
   <img src="images/registre.png" width="900">
 </p>
+
 * **Cartographie (Heatmap) :** Matrice visuelle de l'exposition aux risques (séparée en quadrants classiques) générée en temps réel.
 * **Plan de Traitement (PACS) :** Sous chaque risque, un module complet de gestion de projet permet de décliner la stratégie (Réduire, Transférer...) en actions opérationnelles :
   * Assignation de porteurs (Responsables).
@@ -30,6 +31,7 @@ Pensée pour les RSSI, les qualiticiens et les équipes cybersécurité, elle pe
 <p align="center">
   <img src="images/traitement-pacs.png" width="900">
 </p>
+
 * **Reporting Exécutif :** Génération de rapports PDF propres et formatés pour l'impression (mode paysage, saut de page, nettoyage visuel), idéaux pour les comités de direction (CODIR).
 <p align="center">
   <img src="images/rapport_pdf.png" width="900">
