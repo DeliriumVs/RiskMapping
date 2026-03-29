@@ -49,7 +49,7 @@ La plateforme intègre un module de gamification pour faciliter l'identification
 
 ### Atelier en cours – Saisie collaborative des scénarios
 <p align="center">
-  <img src="images/atl_en_cours.png" width="900">
+  <img src="images/suivi_atl.png" width="900">
 </p>
 
 ### 🛡️ Sécurité & Gouvernance (Enterprise-Grade)
