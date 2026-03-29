@@ -7,22 +7,48 @@ Pensée pour les RSSI, les qualiticiens et les équipes cybersécurité, elle pe
 ![Version](https://img.shields.io/badge/version-1.1-blue.svg)
 ![Methodology](https://img.shields.io/badge/methodology-EBIOS_RM-success.svg)
 ![Security](https://img.shields.io/badge/security-Enterprise_Grade-red.svg)
+---
+
+## 🖥️ Vue d’ensemble
+
+<p align="center">
+  <img src="images/index.png" width="900">
+</p>
 
 ## ✨ Fonctionnalités Principales
 
 ### 📊 Pilotage et Amélioration Continue (GRC)
 * **Registre Dynamique :** Centralisation des risques traités, évaluation de la gravité/vraisemblance et calcul automatique des niveaux de criticité.
+<p align="center">
+  <img src="images/registre.png" width="900">
+</p>
 * **Cartographie (Heatmap) :** Matrice visuelle de l'exposition aux risques (séparée en quadrants classiques) générée en temps réel.
 * **Plan de Traitement (PACS) :** Sous chaque risque, un module complet de gestion de projet permet de décliner la stratégie (Réduire, Transférer...) en actions opérationnelles :
   * Assignation de porteurs (Responsables).
   * Suivi des échéances et statuts (À faire, En cours, Bloqué, Terminé).
   * Intégration fluide avec les outils IT existants via des liens directs vers vos tickets (Jira, ServiceNow, GLPI...).
+<p align="center">
+  <img src="docs/images/traitement-pacs.png" width="900">
+</p>
 * **Reporting Exécutif :** Génération de rapports PDF propres et formatés pour l'impression (mode paysage, saut de page, nettoyage visuel), idéaux pour les comités de direction (CODIR).
+<p align="center">
+  <img src="docs/images/rapport_pdf.png" width="900">
+</p>
 
 ### 🎯 Ateliers d'Identification (Module Participatif)
 La plateforme intègre un module de gamification pour faciliter l'identification initiale des risques avec les métiers :
 * **Idéation Guidée :** Création de scénarios ("cauchemars") liés aux valeurs métiers (DICP) et aux sources de menaces de l'entreprise.
 * **Poker du Risque :** Évaluation de la gravité en groupe via un système de débat suivi d'un vote secret (Scrum) sur smartphone ou PC.
+
+### Création d’un atelier (Animateur / Admin)
+<p align="center">
+  <img src="images/atl_creation.png" width="900">
+</p>
+
+### Atelier en cours – Saisie collaborative des scénarios
+<p align="center">
+  <img src="images/atl_en_cours.png" width="900">
+</p>
 
 ### 🛡️ Sécurité & Gouvernance (Enterprise-Grade)
 * **Piste d'Audit (Audit Trail) :** Traçabilité totale. Toutes les actions sensibles (élévation de privilèges, créations, suppressions, modifications) sont journalisées et horodatées.
