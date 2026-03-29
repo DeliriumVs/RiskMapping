@@ -28,11 +28,11 @@ Pensée pour les RSSI, les qualiticiens et les équipes cybersécurité, elle pe
   * Suivi des échéances et statuts (À faire, En cours, Bloqué, Terminé).
   * Intégration fluide avec les outils IT existants via des liens directs vers vos tickets (Jira, ServiceNow, GLPI...).
 <p align="center">
-  <img src="docs/images/traitement-pacs.png" width="900">
+  <img src="images/traitement-pacs.png" width="900">
 </p>
 * **Reporting Exécutif :** Génération de rapports PDF propres et formatés pour l'impression (mode paysage, saut de page, nettoyage visuel), idéaux pour les comités de direction (CODIR).
 <p align="center">
-  <img src="docs/images/rapport_pdf.png" width="900">
+  <img src="images/rapport_pdf.png" width="900">
 </p>
 
 ### 🎯 Ateliers d'Identification (Module Participatif)
