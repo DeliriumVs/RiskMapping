@@ -58,6 +58,10 @@ La plateforme intègre un module de gamification pour faciliter l'identification
 * **Provisioning :** Quarantaine des nouveaux inscrits avec validation manuelle par l'administrateur.
 * **Standard ANSSI :** Protection des accès par algorithme de hachage **Argon2id**.
 
+<p align="center">
+  <img src="images/audit_trail.png" width="900">
+</p>
+
 ---
 
 ## 🛠️ Architecture & Déploiement
