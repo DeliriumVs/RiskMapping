@@ -81,7 +81,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </form>
         
         <div style="text-align: center; margin-top: 20px;">
-            <a href="registre_risques.php" style="color: #8b949e; text-decoration: none; font-size: 0.9rem;">← Annuler et retourner au Registre</a>
+            <a href="choix_atelier.php" style="color: #8b949e; text-decoration: none; font-size: 0.9rem;">← Retour au choix des ateliers</a>
         </div>
     </div>
 </body>

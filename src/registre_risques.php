@@ -79,7 +79,7 @@ $admin_username = $_SESSION['admin_username'] ?? 'Utilisateur';
             </div>
             <div class="nav-group">
                 <span class="nav-title">Ateliers</span>
-                <a href="mj_setup.php" class="nav-btn-real nav-btn-action" style="background: var(--accent-red);">➕ Nouvel Atelier</a>
+                <a href="choix_atelier.php" class="nav-btn-real nav-btn-action" style="background: var(--accent-red);">🎯 Créer un Atelier</a>
             </div>
             <?php endif; ?>
 
