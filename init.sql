@@ -89,6 +89,10 @@ CREATE TABLE scenarios_bruts (
     justification_traitement TEXT,
     justification_impact TEXT,
     justification_vraisemblance TEXT,
+    commentaire_global TEXT NULL,
+    statut_qualification ENUM('a_qualifier', 'qualifie') NOT NULL DEFAULT 'a_qualifier',
+    titre_technique VARCHAR(255) NULL,
+    scenario_technique TEXT NULL,
     traitement_updated_at TIMESTAMP NULL,
     timer_end_at TIMESTAMP NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -134,7 +138,35 @@ CREATE TABLE votes_poker (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- =========================================================
--- 5. INSERTION DES DONNÉES PAR DÉFAUT
+-- 5. BIENS SUPPORTS (ATELIER 1)
+-- =========================================================
+
+CREATE TABLE biens_supports (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nom VARCHAR(200) NOT NULL,
+    type_bien ENUM(
+        'Logiciel / Application',
+        'Infrastructure réseau',
+        'Serveur / Cloud',
+        'Poste de travail',
+        'Personne / Équipe',
+        'Site / Local',
+        'Autre'
+    ) NOT NULL DEFAULT 'Autre',
+    description TEXT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE valeur_bien_support (
+    valeur_metier_id INT NOT NULL,
+    bien_support_id  INT NOT NULL,
+    PRIMARY KEY (valeur_metier_id, bien_support_id),
+    FOREIGN KEY (valeur_metier_id) REFERENCES valeurs_metier(id)   ON DELETE CASCADE,
+    FOREIGN KEY (bien_support_id)  REFERENCES biens_supports(id)   ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- =========================================================
+-- 6. INSERTION DES DONNÉES PAR DÉFAUT
 -- =========================================================
 
 INSERT INTO equipes (nom) VALUES 
@@ -155,7 +187,21 @@ INSERT INTO menaces (type_source, motivation, niveau_capacite) VALUES
 ('Hacktiviste', 'Idéologie / Dégradation d''image', 'Modérée');
 
 -- =========================================================
--- 6. SUIVI DES ACTIONS DE TRAITEMENT (PACS)
+-- 7. OBJECTIFS VISÉS — COUPLES SR/OV (ATELIER 2)
+-- =========================================================
+
+CREATE TABLE objectifs_vises (
+    id         INT AUTO_INCREMENT PRIMARY KEY,
+    menace_id  INT NOT NULL,
+    description VARCHAR(255) NOT NULL,
+    pertinence ENUM('A évaluer', 'Retenu', 'Non retenu') NOT NULL DEFAULT 'A évaluer',
+    notes      TEXT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (menace_id) REFERENCES menaces(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- =========================================================
+-- 8. SUIVI DES ACTIONS DE TRAITEMENT (PACS)
 -- =========================================================
 CREATE TABLE actions_traitement (
     id INT AUTO_INCREMENT PRIMARY KEY,

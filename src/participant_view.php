@@ -158,10 +158,10 @@ if ($scenario_actif && $scenario_actif['timer_end_at']) {
             <form method="POST" action="participant_view.php">
                 <h3 style="color: #c9d1d9;">💥 Gravité (Conséquence)</h3>
                 <div style="display: flex; flex-direction: column;">
-                    <input type="radio" id="i1" name="impact" value="1" required><label class="vote-btn" for="i1">1 - Mineure</label>
-                    <input type="radio" id="i2" name="impact" value="2"><label class="vote-btn" for="i2">2 - Significative</label>
-                    <input type="radio" id="i3" name="impact" value="3"><label class="vote-btn" for="i3">3 - Grave</label>
-                    <input type="radio" id="i4" name="impact" value="4"><label class="vote-btn" for="i4">4 - Critique</label>
+                    <input type="radio" id="i1" name="impact" value="1" required><label class="vote-btn" for="i1">1 - Critique</label>
+                    <input type="radio" id="i2" name="impact" value="2"><label class="vote-btn" for="i2">2 - Grave</label>
+                    <input type="radio" id="i3" name="impact" value="3"><label class="vote-btn" for="i3">3 - Significative</label>
+                    <input type="radio" id="i4" name="impact" value="4"><label class="vote-btn" for="i4">4 - Mineure</label>
                 </div>
                 <h3 style="color: #c9d1d9; margin-top: 20px;">🎲 Vraisemblance (Probabilité)</h3>
                 <div style="display: flex; flex-direction: column;">

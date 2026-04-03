@@ -52,18 +52,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         $impact = $avgs['avg_i'] ? (int)round($avgs['avg_i']) : 1;
         $vraisemblance = $avgs['avg_v'] ? (int)round($avgs['avg_v']) : 1;
-        $priorite_mult = $impact * $vraisemblance; 
-        $niveau_ebios_max = max($impact, $vraisemblance); 
-        
+        // Lookup EBIOS RM : G=1 (Critique) → 4 (Mineure), V=1 (Très faible) → 4 (Très élevée)
+        // Zone : 3=Élevé (rouge), 2=Modéré (orange), 1=Faible (teal)
+        $heatmap_zones = [
+            '1,1'=>2,'1,2'=>2,'1,3'=>3,'1,4'=>3,
+            '2,1'=>1,'2,2'=>2,'2,3'=>3,'2,4'=>3,
+            '3,1'=>1,'3,2'=>1,'3,3'=>2,'3,4'=>3,
+            '4,1'=>1,'4,2'=>1,'4,3'=>2,'4,4'=>2,
+        ];
+        $niveau_ebios = $heatmap_zones["$impact,$vraisemblance"] ?? 1;
+        $priorite_mult = $impact * $vraisemblance;
+
         $stmt = $pdo->prepare("UPDATE scenarios_bruts SET statut = 'resultat', impact_estime = ?, vraisemblance_estimee = ?, priorite = ?, niveau_ebios = ? WHERE id = ?");
-        $stmt->execute([$impact, $vraisemblance, $priorite_mult, $niveau_ebios_max, $scenario_id]);
+        $stmt->execute([$impact, $vraisemblance, $priorite_mult, $niveau_ebios, $scenario_id]);
     }
     elseif (isset($_POST['suivant'])) {
         $just_impact = trim($_POST['justification_impact'] ?? '');
         $just_vraisemblance = trim($_POST['justification_vraisemblance'] ?? '');
+        $commentaire_global = trim($_POST['commentaire_global'] ?? '');
 
-        $pdo->prepare("UPDATE scenarios_bruts SET statut = 'traite', justification_impact = ?, justification_vraisemblance = ? WHERE id = ?")
-            ->execute([$just_impact, $just_vraisemblance, $scenario_id]);
+        $pdo->prepare("UPDATE scenarios_bruts SET statut = 'traite', justification_impact = ?, justification_vraisemblance = ?, commentaire_global = ? WHERE id = ?")
+            ->execute([$just_impact, $just_vraisemblance, $commentaire_global, $scenario_id]);
     }
     
     header("Location: revue_scenarios.php");
@@ -260,14 +269,19 @@ if ($scenario_actif['timer_end_at']) {
                     <div style="flex: 1; background: #161b22; border: 1px solid #30363d; padding: 20px; border-radius: 8px; text-align: center;">
                         <div style="color: #8b949e; text-transform: uppercase; margin-bottom: 10px;">Gravité Moyenne (Consensus)</div>
                         <div style="font-size: 3rem; color: var(--accent-green); font-weight: bold; margin-bottom: 15px;"><?= $scenario_actif['impact_estime'] ?></div>
-                        <textarea name="justification_impact" class="textarea-notes" placeholder="Justification des impacts retenus (A renseigner en direct avec le groupe)..." required style="text-align: left;"></textarea>
+                        <textarea name="justification_impact" class="textarea-notes" placeholder="Justification des impacts retenus (A renseigner en direct avec le groupe)..." style="text-align: left;"></textarea>
                     </div>
                     
                     <div style="flex: 1; background: #161b22; border: 1px solid #30363d; padding: 20px; border-radius: 8px; text-align: center;">
                         <div style="color: #8b949e; text-transform: uppercase; margin-bottom: 10px;">Vraisemblance Moyenne (Consensus)</div>
                         <div style="font-size: 3rem; color: var(--accent-green); font-weight: bold; margin-bottom: 15px;"><?= $scenario_actif['vraisemblance_estimee'] ?></div>
-                        <textarea name="justification_vraisemblance" class="textarea-notes" placeholder="Justification de la probabilité retenue (A renseigner en direct avec le groupe)..." required style="text-align: left;"></textarea>
+                        <textarea name="justification_vraisemblance" class="textarea-notes" placeholder="Justification de la probabilité retenue (A renseigner en direct avec le groupe)..." style="text-align: left;"></textarea>
                     </div>
+                </div>
+
+                <div style="background: #161b22; border: 1px dashed #30363d; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                    <div style="color: #8b949e; text-transform: uppercase; font-size: 0.8rem; margin-bottom: 8px;">💬 Commentaire général de l'animateur <span style="font-weight: normal; text-transform: none;">(optionnel)</span></div>
+                    <textarea name="commentaire_global" class="textarea-notes" placeholder="Note générale sur ce scénario (ex : à l'unanimité, il est convenu de réhausser la vraisemblance d'un point)..." style="text-align: left; height: 80px;"></textarea>
                 </div>
 
                 <button type="submit" name="suivant" class="btn btn-mj" style="width: 100%; font-size: 1.2rem; padding: 15px; background-color: var(--accent-green); border-color: var(--accent-green); color: #000;">
