@@ -8,8 +8,8 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'MJ' || $admin_role === '
 ?>
 
 <div style="padding: 20px; background: #161b22; border-radius: 8px; border: 1px solid #30363d;">
-    <h2 style="color: #fff; margin-top: 0;">🦹 Gestion des Sources de Menaces</h2>
-    <p style="color: #8b949e; margin-bottom: 20px;">Identifiez les attaquants potentiels.</p>
+    <h2 style="color: #fff; margin-top: 0;">🦹 Gestion des Sources de Risque</h2>
+    <p style="color: #8b949e; margin-bottom: 20px;">Identifiez les sources de risque (attaquants potentiels et leurs motivations).</p>
 
     <div id="api-message-menaces" style="display: none; padding: 10px; border-radius: 4px; margin-bottom: 20px;"></div>
 
@@ -28,7 +28,7 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'MJ' || $admin_role === '
         </tbody>
     </table>
 
-    <h4 style="color: #3b82f6; margin-bottom: 15px;">➕ Ajouter une Source de Menace</h4>
+    <h4 style="color: #3b82f6; margin-bottom: 15px;">➕ Ajouter une Source de Risque</h4>
     <form id="form-add-menace" style="display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 10px; align-items: end;">
         <div>
             <label style="display:block; font-size: 0.8rem; color:#8b949e; margin-bottom:5px;">Source</label>

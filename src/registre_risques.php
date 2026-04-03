@@ -81,7 +81,12 @@ if ($has_active_session) {
             <div class="nav-group">
                 <span class="nav-title">Référentiels</span>
                 <button class="nav-btn-view" data-target="admin_valeurs.php">💎 Valeurs Métier</button>
-                <button class="nav-btn-view" data-target="admin_menaces.php">🦹 Menaces</button>
+                <button class="nav-btn-view" data-target="admin_biens_supports.php">🔷 Biens Supports</button>
+                <button class="nav-btn-view" data-target="admin_menaces.php">🦹 Sources de Risque</button>
+                <button class="nav-btn-view" data-target="admin_objectifs_vises.php">🎯 Objectifs Visés</button>
+            </div>
+            <div class="nav-group">
+                <span class="nav-title">Organisation</span>
                 <button class="nav-btn-view" data-target="admin_equipes.php">🏢 Équipes</button>
             </div>
             <div class="nav-group">
