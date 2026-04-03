@@ -247,7 +247,7 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'MJ') { die("Accès refus
                 let html = `
                     <td class="drag-handle no-print" style="vertical-align: middle;">⣿</td>
                     <td style="text-align: center; vertical-align: middle;"><span class="risk-dot">${s.visual_id}</span></td>
-                    <td><strong style="color: #000;">${s.nom_session}</strong><br><span style="font-size: 0.75rem; color: #666;">${dateC}</span></td>
+                    <td><strong style="color: #c9d1d9;">${s.nom_session}</strong><br><span style="font-size: 0.75rem; color: #8b949e;">${dateC}</span></td>
                     <td><strong>${s.titre}</strong></td>
                     <td style="text-align: center;"><strong>${imp}</strong></td>
                     <td style="text-align: center;"><strong>${vrai}</strong></td>

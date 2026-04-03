@@ -89,6 +89,7 @@ CREATE TABLE scenarios_bruts (
     justification_traitement TEXT,
     justification_impact TEXT,
     justification_vraisemblance TEXT,
+    commentaire_global TEXT NULL,
     traitement_updated_at TIMESTAMP NULL,
     timer_end_at TIMESTAMP NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
