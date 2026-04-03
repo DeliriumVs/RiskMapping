@@ -184,7 +184,21 @@ INSERT INTO menaces (type_source, motivation, niveau_capacite) VALUES
 ('Hacktiviste', 'Idéologie / Dégradation d''image', 'Modérée');
 
 -- =========================================================
--- 7. SUIVI DES ACTIONS DE TRAITEMENT (PACS)
+-- 7. OBJECTIFS VISÉS — COUPLES SR/OV (ATELIER 2)
+-- =========================================================
+
+CREATE TABLE objectifs_vises (
+    id         INT AUTO_INCREMENT PRIMARY KEY,
+    menace_id  INT NOT NULL,
+    description VARCHAR(255) NOT NULL,
+    pertinence ENUM('A évaluer', 'Retenu', 'Non retenu') NOT NULL DEFAULT 'A évaluer',
+    notes      TEXT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (menace_id) REFERENCES menaces(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- =========================================================
+-- 8. SUIVI DES ACTIONS DE TRAITEMENT (PACS)
 -- =========================================================
 CREATE TABLE actions_traitement (
     id INT AUTO_INCREMENT PRIMARY KEY,

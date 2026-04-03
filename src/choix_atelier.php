@@ -179,11 +179,11 @@ if ($admin_role === 'lecteur') {
             </div>
 
             <!-- ATELIER 2 -->
-            <div class="atelier-card disabled">
+            <div class="atelier-card clickable">
                 <div class="card-bg-number">02</div>
                 <div class="atelier-title">Sources de Risque</div>
                 <div class="atelier-subtitle">Atelier 2 — EBIOS RM</div>
-                <div><span class="status-badge status-wip">🚧 En développement</span></div>
+                <div><span class="status-badge status-partial">⚙️ Partiel</span></div>
                 <div class="atelier-desc">
                     Recenser les <strong>Sources de Risque (SR)</strong> pertinentes et leurs <strong>Objectifs Visés (OV)</strong>. Construire les couples <strong>SR/OV</strong> représentatifs de la menace réelle pesant sur l'organisation.
                 </div>
@@ -191,7 +191,7 @@ if ($admin_role === 'lecteur') {
                     <span class="cbadge cb-sr">SR</span>
                     <span class="cbadge cb-ov">OV</span>
                 </div>
-                <span class="card-btn btn-gray">Bientôt disponible</span>
+                <a href="atelier2_sources_risque.php" class="card-btn btn-blue">Démarrer l'Atelier 2 →</a>
             </div>
 
             <!-- ATELIER 3 -->
