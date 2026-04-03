@@ -16,14 +16,15 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'MJ' || $admin_role === '
     <table style="width: 100%; border-collapse: collapse; margin-bottom: 30px;">
         <thead>
             <tr style="text-align: left; color: #8b949e; border-bottom: 2px solid #30363d;">
+                <th style="padding: 10px; width: 90px;">Identifiant</th>
                 <th style="padding: 10px;">Type de Source</th>
                 <th style="padding: 10px;">Motivation</th>
                 <th style="padding: 10px;">Capacité / Ressources</th>
-                <th style="padding: 10px; text-align: right;">Action</th>
+                <th style="padding: 10px;">Action</th>
             </tr>
         </thead>
         <tbody id="table-body-menaces">
-            <tr><td colspan="4" style="text-align:center; padding:20px; color:#8b949e;">Chargement des données via API...</td></tr>
+            <tr><td colspan="5" style="text-align:center; padding:20px; color:#8b949e;">Chargement des données via API...</td></tr>
         </tbody>
     </table>
 
@@ -73,7 +74,7 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'MJ' || $admin_role === '
 
             tableBodyMenaces.innerHTML = '';
             if (json.data.length === 0) {
-                tableBodyMenaces.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:10px; color:#8b949e;">Aucune menace configurée.</td></tr>';
+                tableBodyMenaces.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:10px; color:#8b949e;">Aucune menace configurée.</td></tr>';
                 return;
             }
 
@@ -86,9 +87,10 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'MJ' || $admin_role === '
                 }
                 const srId = 'SR-' + String(menace.id).padStart(3, '0');
                 tr.innerHTML = `
-                    <td style="padding: 10px; color: #fff; font-weight: bold;">
-                        <span style="font-family: monospace; font-size: 0.72rem; background: rgba(218,41,28,0.12); color: #da291c; border: 1px solid #da291c; padding: 2px 7px; border-radius: 4px; margin-right: 8px;">${srId}</span>${menace.type_source}
+                    <td style="padding: 10px;">
+                        <span style="font-family: monospace; font-size: 0.72rem; background: rgba(218,41,28,0.12); color: #da291c; border: 1px solid #da291c; padding: 2px 7px; border-radius: 4px;">${srId}</span>
                     </td>
+                    <td style="padding: 10px; color: #fff; font-weight: bold;">${menace.type_source}</td>
                     <td style="padding: 10px; color: #c9d1d9;">${menace.motivation || ''}</td>
                     <td style="padding: 10px;"><span style="background: rgba(255,165,0,0.1); color: orange; padding: 3px 8px; border-radius: 4px; font-size: 0.8rem;">${menace.niveau_capacite}</span></td>
                     <td style="padding: 10px; text-align: right;">${deleteBtnHTML}</td>
