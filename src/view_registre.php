@@ -229,13 +229,14 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'MJ') { die("Accès refus
             let thHtml = `
                 <th class="no-print">↕</th>
                 <th style="width: 50px; text-align: center;">ID</th>
-                <th>Atelier d'origine</th>
-                <th style="width: 25%;">Scénario de Menace</th>
+                <th style="width: 20%;">Scénario Technique</th>
+                <th style="width: 22%;">Scénario de Menace (terrain)</th>
                 <th>Gravité</th>
                 <th>Vraisemblance</th>
                 <th>Niveau</th>
                 <th>Criticité</th>
-                <th style="width: 25%;">Traitement & Plan d'Action</th>`;
+                <th style="width: 100px;">Atelier</th>
+                <th style="width: 18%;">Traitement & Plan d'Action</th>`;
             if (json.user_role !== 'lecteur') thHtml += `<th class="no-print">Actions</th>`;
             thead.innerHTML = thHtml;
             
@@ -244,7 +245,7 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'MJ') { die("Accès refus
 
             if (json.data.length === 0) {
                 document.getElementById('heatmap-container').style.display = 'none';
-                tbody.innerHTML = '<tr><td colspan="10" style="text-align:center; padding:20px;">Aucun risque enregistré.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="11" style="text-align:center; padding:20px;">Aucun risque enregistré.</td></tr>';
                 return;
             }
 
@@ -271,18 +272,21 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'MJ') { die("Accès refus
                 tr.setAttribute('data-id', s.id);
                 tr.classList.add('main-row');
                 
+                const hasTitreTech = s.titre_technique && s.titre_technique.trim() !== '';
+                const techniqueTd = hasTitreTech
+                    ? `<strong style="color:#a78bfa;">${s.titre_technique}</strong><br>${buildQualBadge(s, json.user_role)}`
+                    : buildQualBadge(s, json.user_role);
+
                 let html = `
                     <td class="drag-handle no-print" style="vertical-align: middle;">⣿</td>
                     <td style="text-align: center; vertical-align: middle;"><span class="risk-dot">${s.visual_id}</span></td>
-                    <td><strong style="color: #c9d1d9;">${s.nom_session}</strong><br><span style="font-size: 0.75rem; color: #8b949e;">${dateC}</span></td>
-                    <td>
-                        <strong>${s.titre}</strong><br>
-                        ${buildQualBadge(s, json.user_role)}
-                    </td>
+                    <td>${techniqueTd}</td>
+                    <td><strong>${s.titre}</strong></td>
                     <td style="text-align: center;"><strong>${imp}</strong></td>
                     <td style="text-align: center;"><strong>${vrai}</strong></td>
                     <td style="text-align: center;"><span class="badge-risk ${c_risk}">${niv}</span></td>
                     <td style="text-align: center;"><span class="badge-risk ${c_mult}">${prio}</span></td>
+                    <td style="font-size:0.78rem; color:#c9d1d9;">${s.nom_session}<br><span style="font-size:0.7rem; color:#8b949e;">${dateC}</span></td>
                     <td style="text-align: center;">
                         <span class="badge-traitement ${c_trait}" style="display:block; margin-bottom:5px;">${trait}</span>
                         <button id="btn-toggle-${s.id}" onclick="toggleActions(${s.id}, this)" class="btn no-print" style="font-size: 0.75rem; background: #0d1117; border: 1px solid #3b82f6; color: #3b82f6; width: 100%; cursor: pointer;">📋 Plan d'action 🔽</button>
@@ -306,7 +310,7 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'MJ') { die("Accès refus
                 trActions.dataset.technique = s.scenario_technique || '';
                 trActions.style.display = 'none';
                 trActions.style.backgroundColor = '#0d1117'; 
-                trActions.innerHTML = `<td colspan="10" class="action-content-wrapper" style="padding: 15px; border: 1px dashed #3b82f6;"><div id="actions-content-${s.id}">Chargement...</div></td>`;
+                trActions.innerHTML = `<td colspan="11" class="action-content-wrapper" style="padding: 15px; border: 1px dashed #3b82f6;"><div id="actions-content-${s.id}">Chargement...</div></td>`;
                 tbody.appendChild(trActions);
             });
 

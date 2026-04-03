@@ -30,10 +30,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $statut_qualification = in_array($_POST['statut_qualification'] ?? '', ['a_qualifier', 'qualifie'])
         ? $_POST['statut_qualification']
         : 'a_qualifier';
+    $titre_technique    = trim($_POST['titre_technique']    ?? '');
     $scenario_technique = trim($_POST['scenario_technique'] ?? '');
 
-    $stmt = $pdo->prepare("UPDATE scenarios_bruts SET titre = ?, description = ?, impact_estime = ?, vraisemblance_estimee = ?, priorite = ?, niveau_ebios = ?, strategie_traitement = ?, justification_traitement = ?, statut_qualification = ?, scenario_technique = ?, traitement_updated_at = CURRENT_TIMESTAMP WHERE id = ?");
-    $stmt->execute([$titre, $description, $impact, $vraisemblance, $priorite_mult, $niveau_ebios_max, $traitement, $justification, $statut_qualification, $scenario_technique, $id_scenario]);
+    $stmt = $pdo->prepare("UPDATE scenarios_bruts SET titre = ?, description = ?, impact_estime = ?, vraisemblance_estimee = ?, priorite = ?, niveau_ebios = ?, strategie_traitement = ?, justification_traitement = ?, statut_qualification = ?, titre_technique = ?, scenario_technique = ?, traitement_updated_at = CURRENT_TIMESTAMP WHERE id = ?");
+    $stmt->execute([$titre, $description, $impact, $vraisemblance, $priorite_mult, $niveau_ebios_max, $traitement, $justification, $statut_qualification, $titre_technique, $scenario_technique, $id_scenario]);
     
     header("Location: " . $redirect_url);
     exit;
@@ -112,6 +113,9 @@ if (!$scenario) { die("Scénario introuvable."); }
                 <div style="margin-top: 20px; padding-top: 20px; border-top: 1px dashed #30363d;">
                     <label style="color: #a78bfa; font-weight: bold;">🔬 Qualification Technique (post-atelier)</label>
                     <p style="color: #8b949e; font-size: 0.8rem; margin: 5px 0 12px;">À renseigner à froid par l'équipe sécurité, après l'atelier participatif.</p>
+
+                    <label style="color: #8b949e; font-size: 0.9rem;">Titre du scénario technique :</label>
+                    <input type="text" name="titre_technique" value="<?= htmlspecialchars($scenario['titre_technique'] ?? '') ?>" placeholder="Ex : RCE via VPN Ivanti → Mouvement latéral AD → Chiffrement ransomware" style="width: 100%; box-sizing: border-box; padding: 10px; background: #0d1117; color: #fff; border: 1px solid #a78bfa; border-radius: 4px; margin-top: 5px; margin-bottom: 15px;">
 
                     <select name="statut_qualification" style="border-color: #a78bfa; margin-bottom: 15px; width: 100%; padding: 10px; background: #0d1117; color: #fff; border-radius: 4px;">
                         <option value="a_qualifier" <?= ($scenario['statut_qualification'] ?? 'a_qualifier') === 'a_qualifier' ? 'selected' : '' ?>>⚠️ À qualifier — En attente de relecture technique</option>
