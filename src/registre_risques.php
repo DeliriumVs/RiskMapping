@@ -10,6 +10,13 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'MJ') {
 $admin_role = $_SESSION['admin_role'] ?? 'lecteur';
 $admin_username = $_SESSION['admin_username'] ?? 'Utilisateur';
 $has_active_session = isset($_SESSION['session_id']) && !empty($_SESSION['session_id']);
+$session_is_running = false;
+if ($has_active_session) {
+    $stmt_sess = $pdo->prepare("SELECT statut FROM sessions WHERE id = ?");
+    $stmt_sess->execute([$_SESSION['session_id']]);
+    $sess_statut = $stmt_sess->fetchColumn();
+    $session_is_running = in_array($sess_statut, ['configuration', 'saisie', 'discussion']);
+}
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -68,7 +75,6 @@ $has_active_session = isset($_SESSION['session_id']) && !empty($_SESSION['sessio
             <div class="nav-group">
                 <span class="nav-title">Piloter</span>
                 <button class="nav-btn-view active" data-target="view_registre.php">📊 Registre</button>
-                <button class="nav-btn-view" data-target="view_historique.php">📂 Historique</button>
             </div>
             
             <?php if ($admin_role === 'admin' || $admin_role === 'animateur'): ?>
@@ -80,9 +86,12 @@ $has_active_session = isset($_SESSION['session_id']) && !empty($_SESSION['sessio
             </div>
             <div class="nav-group">
                 <span class="nav-title">Ateliers</span>
-                <?php if ($has_active_session): ?>
+                <?php if ($session_is_running): ?>
                     <a href="mj_dashboard.php" class="nav-btn-real" style="background: rgba(34,197,94,0.15); border-color: #22c55e; color: #22c55e; font-weight: bold;">🟢 Atelier en cours</a>
+                <?php else: ?>
+                    <span class="nav-btn-real" style="opacity: 0.35; cursor: not-allowed;" title="Aucun atelier actif">⬜ Atelier en cours</span>
                 <?php endif; ?>
+                <button class="nav-btn-view" data-target="view_historique.php">📂 Historique Atl4</button>
                 <a href="choix_atelier.php" class="nav-btn-real nav-btn-action" style="background: var(--accent-red);">🎯 Créer un Atelier</a>
             </div>
             <?php endif; ?>
