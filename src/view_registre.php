@@ -238,7 +238,7 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'MJ') { die("Accès refus
             
             let thHtml = `
                 <th class="no-print">↕</th>
-                <th style="width: 50px; text-align: center;">ID</th>
+                <th style="width: 50px;">ID</th>
                 <th style="width: 20%;">Scénario Technique</th>
                 <th style="width: 22%;">Scénario de Menace (terrain)</th>
                 <th>Gravité</th>
@@ -287,14 +287,14 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'MJ') { die("Accès refus
 
                 let html = `
                     <td class="drag-handle no-print" style="vertical-align: middle;">⣿</td>
-                    <td style="text-align: center; vertical-align: middle;"><span class="risk-dot">${s.visual_id}</span></td>
+                    <td style="vertical-align: middle;"><span class="risk-dot">${s.visual_id}</span></td>
                     <td>${techniqueTd}</td>
                     <td><strong>${s.titre}</strong></td>
-                    <td style="text-align: center;"><strong>${imp}</strong></td>
-                    <td style="text-align: center;"><strong>${vrai}</strong></td>
-                    <td style="text-align: center;"><span class="badge-risk ${c_risk}">${riskLabel}</span></td>
+                    <td><strong>${imp}</strong></td>
+                    <td><strong>${vrai}</strong></td>
+                    <td><span class="badge-risk ${c_risk}">${riskLabel}</span></td>
                     <td style="font-size:0.78rem; color:#c9d1d9;">${s.nom_session}<br><span style="font-size:0.7rem; color:#8b949e;">${dateC}</span></td>
-                    <td style="text-align: center;">
+                    <td>
                         <span class="badge-traitement ${c_trait}" style="display:block; margin-bottom:5px;">${trait}</span>
                         <button id="btn-toggle-${s.id}" onclick="toggleActions(${s.id}, this)" class="btn no-print" style="font-size: 0.75rem; background: #0d1117; border: 1px solid #3b82f6; color: #3b82f6; width: 100%; cursor: pointer;">📋 Plan d'action 🔽</button>
                     </td>
@@ -427,12 +427,12 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'MJ') { die("Accès refus
                     
                     html += `<tr>
                         <td><strong>${act.titre}</strong></td>
-                        <td style="text-align:center;">${act.responsable || '-'}</td>
-                        <td style="text-align:center;">${act.date_cible || '-'}</td>
-                        <td style="text-align:center;">${ticketLink}</td>
-                        <td style="text-align:center;">${statusSelect}</td>
+                        <td>${act.responsable || '-'}</td>
+                        <td>${act.date_cible || '-'}</td>
+                        <td>${ticketLink}</td>
+                        <td>${statusSelect}</td>
                         ${json.user_role === 'admin' ? `
-                        <td class="no-print" style="text-align:center; white-space:nowrap;">
+                        <td class="no-print" style="white-space:nowrap;">
                             <button onclick="prepareEditAction(this, ${scenarioId})" data-id="${act.id}" data-titre="${safeTitre}" data-resp="${act.responsable || ''}" data-date="${act.date_cible || ''}" data-link="${act.lien_ticket || ''}" style="background:none; border:none; color:#3b82f6; cursor:pointer; margin-right:8px;" title="Modifier l'action">✎</button>
                             <button onclick="deleteAction(${act.id}, ${scenarioId})" style="background:none; border:none; color:#ff4d4d; cursor:pointer;" title="Supprimer l'action">🗑️</button>
                         </td>` : ''}

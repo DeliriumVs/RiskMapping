@@ -17,7 +17,7 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'MJ' || $admin_role === '
         <thead>
             <tr style="text-align: left; color: #8b949e; border-bottom: 2px solid #30363d;">
                 <th style="padding: 10px;">Nom de la Direction / Équipe</th>
-                <th style="padding: 10px; text-align: right;">Action</th>
+                <th style="padding: 10px;">Action</th>
             </tr>
         </thead>
         <tbody id="table-body-equipes">
@@ -68,7 +68,7 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'MJ' || $admin_role === '
                 }
                 tr.innerHTML = `
                     <td style="padding: 10px; color: #fff; font-weight: bold;">${equipe.nom}</td>
-                    <td style="padding: 10px; text-align: right;">${deleteBtnHTML}</td>
+                    <td style="padding: 10px;">${deleteBtnHTML}</td>
                 `;
                 tableBodyEquipes.appendChild(tr);
             });
