@@ -132,7 +132,7 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'MJ' || $admin_role === '
                             ${pertinenceSelect}
                         </select>
                     </td>
-                    <td style="padding:10px; color:#8b949e; font-size:0.85rem;">${ov.notes || '—'}</td>
+                    <td style="padding:10px; color:#8b949e; font-size:0.85rem; text-align:left;">${ov.notes || '—'}</td>
                     <td style="padding:10px;">${delBtn}</td>
                 `;
                 tbody.appendChild(tr);

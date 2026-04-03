@@ -123,8 +123,8 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'MJ' || $admin_role === '
                         <span style="font-family:monospace; font-size:0.72rem; background:rgba(14,165,233,0.12); color:#0ea5e9; border:1px solid #0ea5e9; padding:2px 7px; border-radius:4px;">${bsId}</span>
                     </td>
                     <td style="padding:10px; color:#c9d1d9; font-size:0.85rem;">${typeIcon(bs.type_bien)} ${bs.type_bien}</td>
-                    <td style="padding:10px; color:#fff; font-weight:bold;">${bs.nom}${bs.description ? `<br><span style="font-size:0.8rem; color:#8b949e; font-weight:normal;">${bs.description}</span>` : ''}</td>
-                    <td style="padding:10px;">${vmBadges}</td>
+                    <td style="padding:10px; color:#fff; font-weight:bold; text-align:left;">${bs.nom}${bs.description ? `<br><span style="font-size:0.8rem; color:#8b949e; font-weight:normal;">${bs.description}</span>` : ''}</td>
+                    <td style="padding:10px; text-align:left;">${vmBadges}</td>
                     <td style="padding:10px;">${delBtn}</td>
                 `;
                 tbody.appendChild(tr);

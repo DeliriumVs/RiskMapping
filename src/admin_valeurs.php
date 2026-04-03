@@ -87,7 +87,7 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'MJ' || $admin_role === '
                         <span style="font-family: monospace; font-size: 0.72rem; background: rgba(59,130,246,0.12); color: #3b82f6; border: 1px solid #3b82f6; padding: 2px 7px; border-radius: 4px;">${vmId}</span>
                     </td>
                     <td style="padding: 10px; color: #fff; font-weight: bold; text-align: left;">${valeur.nom}</td>
-                    <td style="padding: 10px;"><span style="background: #30363d; color: #c9d1d9; padding: 3px 8px; border-radius: 4px; font-size: 0.8rem;">${valeur.critere_impacte}</span></td>
+                    <td style="padding: 10px; text-align: left;"><span style="background: #30363d; color: #c9d1d9; padding: 3px 8px; border-radius: 4px; font-size: 0.8rem;">${valeur.critere_impacte}</span></td>
                     <td style="padding: 10px; color: #8b949e; font-size: 0.9rem; text-align: left;">${valeur.description || ''}</td>
                     <td style="padding: 10px;">${deleteBtnHTML}</td>
                 `;
