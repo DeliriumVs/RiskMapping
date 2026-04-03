@@ -23,8 +23,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $traitement = $_POST['traitement'];
     $justification = $_POST['justification'];
     
-    $priorite_mult = $impact * $vraisemblance; 
-    $niveau_ebios_max = max($impact, $vraisemblance); 
+    $priorite_mult = $impact * $vraisemblance;
+    $heatmap_zones = [
+        '1,1'=>2,'1,2'=>2,'1,3'=>3,'1,4'=>3,
+        '2,1'=>1,'2,2'=>2,'2,3'=>3,'2,4'=>3,
+        '3,1'=>1,'3,2'=>1,'3,3'=>2,'3,4'=>3,
+        '4,1'=>1,'4,2'=>1,'4,3'=>2,'4,4'=>2,
+    ];
+    $niveau_ebios_max = $heatmap_zones["$impact,$vraisemblance"] ?? 1;
     
     // On met à jour toutes les données ET on horodate le traitement
     $statut_qualification = in_array($_POST['statut_qualification'] ?? '', ['a_qualifier', 'qualifie'])
@@ -79,10 +85,10 @@ if (!$scenario) { die("Scénario introuvable."); }
                     <div>
                         <label>💥 Conséquences :</label>
                         <select name="impact" required>
-                            <option value="1" <?= $scenario['impact_estime'] == 1 ? 'selected' : '' ?>>1 - Mineure</option>
-                            <option value="2" <?= $scenario['impact_estime'] == 2 ? 'selected' : '' ?>>2 - Significative</option>
-                            <option value="3" <?= $scenario['impact_estime'] == 3 ? 'selected' : '' ?>>3 - Grave</option>
-                            <option value="4" <?= $scenario['impact_estime'] == 4 ? 'selected' : '' ?>>4 - Critique</option>
+                            <option value="1" <?= $scenario['impact_estime'] == 1 ? 'selected' : '' ?>>1 - Critique</option>
+                            <option value="2" <?= $scenario['impact_estime'] == 2 ? 'selected' : '' ?>>2 - Grave</option>
+                            <option value="3" <?= $scenario['impact_estime'] == 3 ? 'selected' : '' ?>>3 - Significative</option>
+                            <option value="4" <?= $scenario['impact_estime'] == 4 ? 'selected' : '' ?>>4 - Mineure</option>
                         </select>
                     </div>
                     <div>

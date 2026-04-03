@@ -52,11 +52,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         $impact = $avgs['avg_i'] ? (int)round($avgs['avg_i']) : 1;
         $vraisemblance = $avgs['avg_v'] ? (int)round($avgs['avg_v']) : 1;
-        $priorite_mult = $impact * $vraisemblance; 
-        $niveau_ebios_max = max($impact, $vraisemblance); 
-        
+        // Lookup EBIOS RM : G=1 (Critique) → 4 (Mineure), V=1 (Très faible) → 4 (Très élevée)
+        // Zone : 3=Élevé (rouge), 2=Modéré (orange), 1=Faible (teal)
+        $heatmap_zones = [
+            '1,1'=>2,'1,2'=>2,'1,3'=>3,'1,4'=>3,
+            '2,1'=>1,'2,2'=>2,'2,3'=>3,'2,4'=>3,
+            '3,1'=>1,'3,2'=>1,'3,3'=>2,'3,4'=>3,
+            '4,1'=>1,'4,2'=>1,'4,3'=>2,'4,4'=>2,
+        ];
+        $niveau_ebios = $heatmap_zones["$impact,$vraisemblance"] ?? 1;
+        $priorite_mult = $impact * $vraisemblance;
+
         $stmt = $pdo->prepare("UPDATE scenarios_bruts SET statut = 'resultat', impact_estime = ?, vraisemblance_estimee = ?, priorite = ?, niveau_ebios = ? WHERE id = ?");
-        $stmt->execute([$impact, $vraisemblance, $priorite_mult, $niveau_ebios_max, $scenario_id]);
+        $stmt->execute([$impact, $vraisemblance, $priorite_mult, $niveau_ebios, $scenario_id]);
     }
     elseif (isset($_POST['suivant'])) {
         $just_impact = trim($_POST['justification_impact'] ?? '');

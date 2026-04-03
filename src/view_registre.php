@@ -17,10 +17,9 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'MJ') { die("Accès refus
     .heatmap-cell { display: flex; flex-wrap: wrap; align-content: flex-start; gap: 4px; padding: 8px; overflow: hidden; }
     .heatmap-x-axis { display: grid; grid-template-columns: repeat(4, 1fr); width: 600px; padding-top: 15px; text-align: center; color: #8b949e; font-size: 0.85rem; font-weight: bold; margin-left: 90px; }
     
-    .bg-critical { background-color: rgba(255, 0, 85, 0.25) !important; }
-    .bg-high { background-color: rgba(255, 68, 68, 0.25) !important; }
-    .bg-medium { background-color: rgba(255, 165, 0, 0.25) !important; }
-    .bg-low { background-color: rgba(0, 255, 204, 0.25) !important; }
+    .bg-high   { background-color: rgba(218, 41,  28,  0.30) !important; }
+    .bg-medium { background-color: rgba(255, 165,  0,  0.25) !important; }
+    .bg-low    { background-color: rgba(  0, 150, 136, 0.25) !important; }
 
     .risk-dot { display: inline-flex; justify-content: center; align-items: center; background: #0d1117; color: #fff; border: 1px solid #8b949e; border-radius: 50%; width: 28px; height: 28px; font-size: 0.75rem; font-weight: bold; cursor: help; box-shadow: 0 2px 4px rgba(0,0,0,0.5); margin: 0; }
     .risk-dot:hover { border-color: #fff; transform: scale(1.1); }
@@ -75,11 +74,10 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'MJ') { die("Accès refus
         /* "Vraisemblance" */
         .heatmap-wrapper > div:last-child { color: #000 !important; font-size: 1.2rem !important; font-weight: bold !important; margin-top: 15px !important;}
 
-        /* Couleurs des quadrants for l'impression */
-        .bg-critical { background-color: #ff4d4d !important; }
-        .bg-high { background-color: #ff9999 !important; }
+        /* Couleurs des quadrants pour l'impression */
+        .bg-high   { background-color: #ffaaaa !important; }
         .bg-medium { background-color: #ffcc99 !important; }
-        .bg-low { background-color: #99ffcc !important; }
+        .bg-low    { background-color: #aaddcc !important; }
         
         .risk-dot { width: 32px !important; height: 32px !important; font-size: 0.9rem !important; background: #000 !important; color: #fff !important; border: 1px solid #fff !important; font-weight: bold !important; box-shadow: none !important; }
         
@@ -128,10 +126,10 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'MJ') { die("Accès refus
         <div>
             <div class="heatmap-core">
                 <div class="heatmap-y-axis">
-                    <div>4<br><span style="font-weight: normal; font-size: 0.75rem;">Critique</span></div>
-                    <div>3<br><span style="font-weight: normal; font-size: 0.75rem;">Grave</span></div>
-                    <div>2<br><span style="font-weight: normal; font-size: 0.75rem;">Significative</span></div>
-                    <div>1<br><span style="font-weight: normal; font-size: 0.75rem;">Mineure</span></div>
+                    <div>1<br><span style="font-weight: normal; font-size: 0.75rem;">Critique</span></div>
+                    <div>2<br><span style="font-weight: normal; font-size: 0.75rem;">Grave</span></div>
+                    <div>3<br><span style="font-weight: normal; font-size: 0.75rem;">Significative</span></div>
+                    <div>4<br><span style="font-weight: normal; font-size: 0.75rem;">Mineure</span></div>
                 </div>
                 <div class="heatmap-grid" id="heatmap-grid"></div>
             </div>
@@ -178,14 +176,26 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'MJ') { die("Accès refus
         setTimeout(() => box.style.display = 'none', 4000);
     }
 
+    // Lookup EBIOS RM : G=1 (Critique) à 4 (Mineure), V=1 (Très faible) à 4 (Très élevée)
+    const EBIOS_ZONE = {
+        '1,1':'bg-medium','1,2':'bg-medium','1,3':'bg-high','1,4':'bg-high',
+        '2,1':'bg-low',   '2,2':'bg-medium','2,3':'bg-high','2,4':'bg-high',
+        '3,1':'bg-low',   '3,2':'bg-low',   '3,3':'bg-medium','3,4':'bg-high',
+        '4,1':'bg-low',   '4,2':'bg-low',   '4,3':'bg-medium','4,4':'bg-medium',
+    };
+    const EBIOS_RISK_CLASS  = { 'bg-high':'risk-high', 'bg-medium':'risk-medium', 'bg-low':'risk-low' };
+    const EBIOS_RISK_LABEL  = { 'bg-high':'Élevé',     'bg-medium':'Modéré',      'bg-low':'Faible'   };
+
+    function getEbiosZone(g, v) { return EBIOS_ZONE[`${g},${v}`] || 'bg-low'; }
+
     function initHeatmapGrid() {
         const grid = document.getElementById('heatmap-grid');
         grid.innerHTML = '';
-        for (let i = 4; i >= 1; i--) {
+        // G=1 (Critique) en haut, G=4 (Mineure) en bas
+        for (let g = 1; g <= 4; g++) {
             for (let v = 1; v <= 4; v++) {
-                let maxVal = Math.max(i, v);
-                let bgClass = maxVal === 4 ? 'bg-critical' : (maxVal === 3 ? 'bg-high' : (maxVal === 2 ? 'bg-medium' : 'bg-low'));
-                grid.innerHTML += `<div class="heatmap-cell ${bgClass}" id="cell-${i}-${v}"></div>`;
+                const bgClass = getEbiosZone(g, v);
+                grid.innerHTML += `<div class="heatmap-cell ${bgClass}" id="cell-${g}-${v}"></div>`;
             }
         }
     }
@@ -234,7 +244,6 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'MJ') { die("Accès refus
                 <th>Gravité</th>
                 <th>Vraisemblance</th>
                 <th>Niveau</th>
-                <th>Criticité</th>
                 <th style="width: 100px;">Atelier</th>
                 <th style="width: 18%;">Traitement & Plan d'Action</th>`;
             if (json.user_role !== 'lecteur') thHtml += `<th class="no-print">Actions</th>`;
@@ -245,7 +254,7 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'MJ') { die("Accès refus
 
             if (json.data.length === 0) {
                 document.getElementById('heatmap-container').style.display = 'none';
-                tbody.innerHTML = '<tr><td colspan="11" style="text-align:center; padding:20px;">Aucun risque enregistré.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="10" style="text-align:center; padding:20px;">Aucun risque enregistré.</td></tr>';
                 return;
             }
 
@@ -260,10 +269,9 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'MJ') { die("Accès refus
                     cell.innerHTML += `<span class="risk-dot" title="${s.titre}">${s.visual_id}</span>`;
                 }
 
-                const niv = parseInt(s.niveau_ebios);
-                const c_risk = niv >= 4 ? 'risk-critical' : (niv >= 3 ? 'risk-high' : (niv >= 2 ? 'risk-medium' : 'risk-low'));
-                const prio = parseInt(s.priorite);
-                const c_mult = prio >= 12 ? 'risk-high' : (prio >= 6 ? 'risk-medium' : 'risk-low');
+                const zone      = getEbiosZone(imp, vrai);
+                const c_risk    = EBIOS_RISK_CLASS[zone];
+                const riskLabel = EBIOS_RISK_LABEL[zone];
                 const trait = s.strategie_traitement;
                 const c_trait = "trait-" + trait.split(' ')[0];
                 const dateC = new Date(s.created_at).toLocaleDateString('fr-FR', {day: '2-digit', month: '2-digit', year: '2-digit'});
@@ -284,8 +292,7 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'MJ') { die("Accès refus
                     <td><strong>${s.titre}</strong></td>
                     <td style="text-align: center;"><strong>${imp}</strong></td>
                     <td style="text-align: center;"><strong>${vrai}</strong></td>
-                    <td style="text-align: center;"><span class="badge-risk ${c_risk}">${niv}</span></td>
-                    <td style="text-align: center;"><span class="badge-risk ${c_mult}">${prio}</span></td>
+                    <td style="text-align: center;"><span class="badge-risk ${c_risk}">${riskLabel}</span></td>
                     <td style="font-size:0.78rem; color:#c9d1d9;">${s.nom_session}<br><span style="font-size:0.7rem; color:#8b949e;">${dateC}</span></td>
                     <td style="text-align: center;">
                         <span class="badge-traitement ${c_trait}" style="display:block; margin-bottom:5px;">${trait}</span>
@@ -310,7 +317,7 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'MJ') { die("Accès refus
                 trActions.dataset.technique = s.scenario_technique || '';
                 trActions.style.display = 'none';
                 trActions.style.backgroundColor = '#0d1117'; 
-                trActions.innerHTML = `<td colspan="11" class="action-content-wrapper" style="padding: 15px; border: 1px dashed #3b82f6;"><div id="actions-content-${s.id}">Chargement...</div></td>`;
+                trActions.innerHTML = `<td colspan="10" class="action-content-wrapper" style="padding: 15px; border: 1px dashed #3b82f6;"><div id="actions-content-${s.id}">Chargement...</div></td>`;
                 tbody.appendChild(trActions);
             });
 

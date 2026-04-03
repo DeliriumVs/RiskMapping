@@ -22,8 +22,8 @@ try {
             FROM scenarios_bruts s 
             JOIN participants p ON s.auteur_id = p.id 
             JOIN sessions sess ON s.session_id = sess.id 
-            WHERE s.statut = 'traite' 
-            ORDER BY s.niveau_ebios DESC, s.priorite DESC, s.created_at DESC
+            WHERE s.statut = 'traite'
+            ORDER BY s.niveau_ebios DESC, s.impact_estime ASC, s.vraisemblance_estimee DESC, s.created_at DESC
         ");
         $stmt->execute();
         $scenarios = $stmt->fetchAll();
