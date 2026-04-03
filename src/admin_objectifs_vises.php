@@ -125,7 +125,7 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'MJ' || $admin_role === '
                         <span style="font-family:monospace; font-size:0.72rem; background:rgba(218,41,28,0.12); color:#da291c; border:1px solid #da291c; padding:2px 7px; border-radius:4px;">${srId}</span>
                         <br><span style="font-size:0.75rem; color:#8b949e;">${ov.sr_nom}</span>
                     </td>
-                    <td style="padding:10px; color:#fff;">${ov.description}</td>
+                    <td style="padding:10px; color:#fff; text-align:left;">${ov.description}</td>
                     <td style="padding:10px;">
                         <select onchange="updatePertinence(${ov.id}, this.value)"
                             style="padding:4px 8px; font-size:0.82rem; background:${cfg.bg}; color:${cfg.color}; border:1px solid ${cfg.border}; border-radius:4px; cursor:pointer; width:100%;">
