@@ -263,6 +263,14 @@ if ($admin_role === 'lecteur') {
                         ns.appendChild(document.createTextNode(s.innerHTML));
                         s.parentNode.replaceChild(ns, s);
                     });
+                    // Envelopper loadMenaces pour qu'elle rafraîchisse aussi le dropdown OV
+                    if (typeof window.loadMenaces === 'function') {
+                        const _origLoad = window.loadMenaces;
+                        window.loadMenaces = async function() {
+                            await _origLoad();
+                            await refreshSrDropdown();
+                        };
+                    }
                 })
                 .catch(() => {
                     document.getElementById('sr-content').innerHTML =
@@ -272,6 +280,14 @@ if ($admin_role === 'lecteur') {
 
         // --- SECTION 2 : Gestion native des Couples SR/OV ---
         const apiOv = 'api_objectifs_vises.php';
+
+        async function refreshSrDropdown() {
+            try {
+                const res  = await fetch(apiOv);
+                const json = await res.json();
+                if (json.status === 'success') populateSrDropdown(json.sources);
+            } catch(e) {}
+        }
 
         const pertinenceConfig = {
             'A évaluer' : { color: '#8b949e', bg: 'rgba(139,148,158,0.12)' },
