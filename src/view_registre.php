@@ -190,6 +190,33 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'MJ') { die("Accès refus
         }
     }
 
+    function buildQualBadge(s, userRole) {
+        const isQualifie = s.statut_qualification === 'qualifie';
+        const label  = isQualifie ? '✅ Qualifié' : '⚠️ À qualifier';
+        const style  = isQualifie
+            ? 'background:rgba(0,230,184,0.1); color:var(--accent-green); border:1px solid var(--accent-green);'
+            : 'background:rgba(255,165,0,0.1); color:orange; border:1px solid orange;';
+        const base   = `font-size:0.7rem; padding:1px 8px; border-radius:10px; font-family:monospace; margin-top:4px; display:inline-block; ${style}`;
+        if (userRole !== 'lecteur') {
+            const next = isQualifie ? 'a_qualifier' : 'qualifie';
+            return `<span onclick="toggleQual(${s.id}, '${next}')" style="cursor:pointer; ${base}" title="Cliquer pour basculer">${label}</span>`;
+        }
+        return `<span style="${base}">${label}</span>`;
+    }
+
+    async function toggleQual(id, newStatut) {
+        try {
+            const res  = await fetch(apiRegistre, {
+                method: 'PATCH',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ id, statut_qualification: newStatut })
+            });
+            const json = await res.json();
+            if (json.status === 'success') loadRegistre();
+            else showMsgReg(json.message, true);
+        } catch(e) { showMsgReg("Erreur lors de la mise à jour.", true); }
+    }
+
     async function loadRegistre() {
         try {
             const res = await fetch(apiRegistre);
@@ -248,7 +275,10 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'MJ') { die("Accès refus
                     <td class="drag-handle no-print" style="vertical-align: middle;">⣿</td>
                     <td style="text-align: center; vertical-align: middle;"><span class="risk-dot">${s.visual_id}</span></td>
                     <td><strong style="color: #c9d1d9;">${s.nom_session}</strong><br><span style="font-size: 0.75rem; color: #8b949e;">${dateC}</span></td>
-                    <td><strong>${s.titre}</strong></td>
+                    <td>
+                        <strong>${s.titre}</strong><br>
+                        ${buildQualBadge(s, json.user_role)}
+                    </td>
                     <td style="text-align: center;"><strong>${imp}</strong></td>
                     <td style="text-align: center;"><strong>${vrai}</strong></td>
                     <td style="text-align: center;"><span class="badge-risk ${c_risk}">${niv}</span></td>
@@ -273,6 +303,7 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'MJ') { die("Accès refus
                 const trActions = document.createElement('tr');
                 trActions.id = `actions-row-${s.id}`;
                 trActions.className = 'action-row-container';
+                trActions.dataset.technique = s.scenario_technique || '';
                 trActions.style.display = 'none';
                 trActions.style.backgroundColor = '#0d1117'; 
                 trActions.innerHTML = `<td colspan="10" class="action-content-wrapper" style="padding: 15px; border: 1px dashed #3b82f6;"><div id="actions-content-${s.id}">Chargement...</div></td>`;
@@ -341,8 +372,15 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'MJ') { die("Accès refus
         try {
             const res = await fetch(`${apiActions}?scenario_id=${scenarioId}`);
             const json = await res.json();
-            
+
+            const technique = document.getElementById(`actions-row-${scenarioId}`)?.dataset.technique || '';
             let html = `<h4 class="no-print print-title-dark" style="color: #3b82f6; margin-top:0; margin-bottom: 10px;">Suivi des actions (PACS)</h4>`;
+            if (technique) {
+                html += `<div style="background:rgba(167,139,250,0.06); border:1px solid rgba(167,139,250,0.25); border-radius:6px; padding:11px 15px; margin-bottom:14px; font-size:0.875rem; color:#c9d1d9; line-height:1.6;">
+                    <strong style="color:#a78bfa; font-size:0.75rem; text-transform:uppercase; letter-spacing:0.04em; display:block; margin-bottom:5px;">🔬 Reformulation technique (équipe sécurité)</strong>
+                    ${technique}
+                </div>`;
+            }
             
             if (json.data.length > 0) {
                 html += `<table class="action-table" style="width:100%; background: #161b22; margin-bottom: 15px;">

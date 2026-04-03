@@ -76,6 +76,36 @@ try {
         exit;
     }
 
+    // ==========================================================
+    // PATCH : Basculer le statut de qualification d'un scénario
+    // ==========================================================
+    elseif ($method === 'PATCH') {
+        if ($admin_role === 'lecteur') {
+            http_response_code(403);
+            echo json_encode(["status" => "error", "message" => "Droits insuffisants."]);
+            exit;
+        }
+
+        $input  = json_decode(file_get_contents('php://input'), true);
+        $id     = (int)($input['id'] ?? 0);
+        $statut = trim($input['statut_qualification'] ?? '');
+
+        if (!$id || !in_array($statut, ['a_qualifier', 'qualifie'])) {
+            http_response_code(400);
+            echo json_encode(["status" => "error", "message" => "Paramètres invalides."]);
+            exit;
+        }
+
+        $pdo->prepare("UPDATE scenarios_bruts SET statut_qualification = ? WHERE id = ?")
+            ->execute([$statut, $id]);
+
+        $label = $statut === 'qualifie' ? 'Qualifié' : 'À qualifier';
+        log_audit($pdo, $_SESSION['admin_id'], 'RISK_QUALIFIED', "Qualification scénario ID $id → $label");
+
+        echo json_encode(["status" => "success", "message" => "Statut mis à jour : $label."]);
+        exit;
+    }
+
     else {
         http_response_code(405);
         echo json_encode(["status" => "error", "message" => "Méthode HTTP non autorisée."]);

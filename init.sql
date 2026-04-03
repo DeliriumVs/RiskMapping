@@ -90,6 +90,8 @@ CREATE TABLE scenarios_bruts (
     justification_impact TEXT,
     justification_vraisemblance TEXT,
     commentaire_global TEXT NULL,
+    statut_qualification ENUM('a_qualifier', 'qualifie') NOT NULL DEFAULT 'a_qualifier',
+    scenario_technique TEXT NULL,
     traitement_updated_at TIMESTAMP NULL,
     timer_end_at TIMESTAMP NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

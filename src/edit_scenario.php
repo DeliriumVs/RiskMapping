@@ -27,8 +27,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $niveau_ebios_max = max($impact, $vraisemblance); 
     
     // On met à jour toutes les données ET on horodate le traitement
-    $stmt = $pdo->prepare("UPDATE scenarios_bruts SET titre = ?, description = ?, impact_estime = ?, vraisemblance_estimee = ?, priorite = ?, niveau_ebios = ?, strategie_traitement = ?, justification_traitement = ?, traitement_updated_at = CURRENT_TIMESTAMP WHERE id = ?");
-    $stmt->execute([$titre, $description, $impact, $vraisemblance, $priorite_mult, $niveau_ebios_max, $traitement, $justification, $id_scenario]);
+    $statut_qualification = in_array($_POST['statut_qualification'] ?? '', ['a_qualifier', 'qualifie'])
+        ? $_POST['statut_qualification']
+        : 'a_qualifier';
+    $scenario_technique = trim($_POST['scenario_technique'] ?? '');
+
+    $stmt = $pdo->prepare("UPDATE scenarios_bruts SET titre = ?, description = ?, impact_estime = ?, vraisemblance_estimee = ?, priorite = ?, niveau_ebios = ?, strategie_traitement = ?, justification_traitement = ?, statut_qualification = ?, scenario_technique = ?, traitement_updated_at = CURRENT_TIMESTAMP WHERE id = ?");
+    $stmt->execute([$titre, $description, $impact, $vraisemblance, $priorite_mult, $niveau_ebios_max, $traitement, $justification, $statut_qualification, $scenario_technique, $id_scenario]);
     
     header("Location: " . $redirect_url);
     exit;
@@ -104,6 +109,19 @@ if (!$scenario) { die("Scénario introuvable."); }
                     <textarea name="justification" placeholder="Ex: Transféré à AWS (Contrat SLA 99.9%). Mesure complémentaire : Mettre en place un backup froid mensuel." style="margin-top: 5px; border-color: #3b82f6;"><?= htmlspecialchars($scenario['justification_traitement'] ?? '') ?></textarea>
                 </div>
                 
+                <div style="margin-top: 20px; padding-top: 20px; border-top: 1px dashed #30363d;">
+                    <label style="color: #a78bfa; font-weight: bold;">🔬 Qualification Technique (post-atelier)</label>
+                    <p style="color: #8b949e; font-size: 0.8rem; margin: 5px 0 12px;">À renseigner à froid par l'équipe sécurité, après l'atelier participatif.</p>
+
+                    <select name="statut_qualification" style="border-color: #a78bfa; margin-bottom: 15px; width: 100%; padding: 10px; background: #0d1117; color: #fff; border-radius: 4px;">
+                        <option value="a_qualifier" <?= ($scenario['statut_qualification'] ?? 'a_qualifier') === 'a_qualifier' ? 'selected' : '' ?>>⚠️ À qualifier — En attente de relecture technique</option>
+                        <option value="qualifie"    <?= ($scenario['statut_qualification'] ?? '') === 'qualifie'    ? 'selected' : '' ?>>✅ Qualifié — Reformulation technique validée</option>
+                    </select>
+
+                    <label style="color: #8b949e; font-size: 0.9rem;">Reformulation technique du scénario :</label>
+                    <textarea name="scenario_technique" placeholder="Ex : Exploitation d'une vulnérabilité RCE sur le VPN Ivanti (CVE-XXXX) permettant l'exécution de code arbitraire, suivie d'un mouvement latéral vers le contrôleur de domaine…" style="margin-top: 5px; border-color: #a78bfa; height: 100px;"><?= htmlspecialchars($scenario['scenario_technique'] ?? '') ?></textarea>
+                </div>
+
                 <div style="display: flex; gap: 15px; margin-top: 25px;">
                     <button type="submit" class="btn btn-mj" style="flex: 1;">💾 Sauvegarder</button>
                     <a href="<?= $redirect_url ?>" class="btn" style="background: #30363d; color: #fff; flex: 1; text-align: center;">Annuler</a>
