@@ -73,9 +73,21 @@ $menaces = $pdo->query("SELECT * FROM menaces ORDER BY type_source ASC")->fetchA
     <title>Saisie - RiskMapping</title>
     <link rel="stylesheet" href="style.css">
     
-    <?php if ($a_soumis): ?>
-        <meta http-equiv="refresh" content="3">
-    <?php endif; ?>
+    <script>
+        // Polling de l'état de session — redirige dès que le MJ ferme les soumissions
+        (function() {
+            let _pollInterval = setInterval(async () => {
+                try {
+                    const res  = await fetch('api_session_status.php');
+                    const data = await res.json();
+                    if (data.status === 'success' && data.session_statut !== 'saisie' && data.session_statut !== 'configuration') {
+                        clearInterval(_pollInterval);
+                        window.location.href = 'participant_view.php';
+                    }
+                } catch(e) {}
+            }, 3000);
+        })();
+    </script>
     
     <style>
         .wait-box { text-align: center; padding: 40px; border-radius: 8px; border: 1px solid #3b82f6; background: rgba(59, 130, 246, 0.05); margin-top: 50px; }

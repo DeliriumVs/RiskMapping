@@ -7,8 +7,9 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'MJ') {
     die("Accès refusé.");
 }
 
-$admin_role = $_SESSION['admin_role'] ?? 'lecteur'; 
+$admin_role = $_SESSION['admin_role'] ?? 'lecteur';
 $admin_username = $_SESSION['admin_username'] ?? 'Utilisateur';
+$has_active_session = isset($_SESSION['session_id']) && !empty($_SESSION['session_id']);
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -79,6 +80,9 @@ $admin_username = $_SESSION['admin_username'] ?? 'Utilisateur';
             </div>
             <div class="nav-group">
                 <span class="nav-title">Ateliers</span>
+                <?php if ($has_active_session): ?>
+                    <a href="mj_dashboard.php" class="nav-btn-real" style="background: rgba(34,197,94,0.15); border-color: #22c55e; color: #22c55e; font-weight: bold;">🟢 Atelier en cours</a>
+                <?php endif; ?>
                 <a href="choix_atelier.php" class="nav-btn-real nav-btn-action" style="background: var(--accent-red);">🎯 Créer un Atelier</a>
             </div>
             <?php endif; ?>
