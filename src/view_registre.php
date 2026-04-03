@@ -301,11 +301,11 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'MJ') { die("Accès refus
                 `;
                 
                 if (json.user_role !== 'lecteur') {
-                    let btnHtml = `<a href="edit_scenario.php?id=${s.id}&from=master" class="btn" style="padding: 6px; font-size: 0.8rem; background: #484f58; color: #ffffff; border: 1px solid #c9d1d9; display: block; margin-bottom: 8px; text-decoration:none; text-align:center; font-weight:bold; border-radius:4px;">✎ Éditer</a>`;
+                    let btnHtml = `<a href="edit_scenario.php?id=${s.id}&from=master" class="btn" style="padding: 6px; font-size: 0.8rem; background: #484f58; color: #ffffff; border: 1px solid #c9d1d9; display: block; width:100%; box-sizing:border-box; margin-bottom: 8px; text-decoration:none; text-align:center; font-weight:bold; border-radius:4px;">✎ Éditer</a>`;
                     if (json.user_role === 'admin') {
-                        btnHtml += `<button onclick="deleteScenario(${s.id})" class="btn" style="padding: 6px; font-size: 0.8rem; background: rgba(255,0,0,0.2); color: #ff4444; border: 1px solid #ff4444; display: block; width:100%; cursor:pointer; border-radius:4px;">🗑️ Suppr.</button>`;
+                        btnHtml += `<button onclick="deleteScenario(${s.id})" class="btn" style="padding: 6px; font-size: 0.8rem; background: rgba(255,0,0,0.2); color: #ff4444; border: 1px solid #ff4444; display: block; width:100%; box-sizing:border-box; cursor:pointer; border-radius:4px;">🗑️ Suppr.</button>`;
                     }
-                    html += `<td class="no-print" style="vertical-align: middle;">${btnHtml}</td>`;
+                    html += `<td class="no-print" style="vertical-align: middle; white-space: nowrap;">${btnHtml}</td>`;
                 }
 
                 tr.innerHTML = html;
