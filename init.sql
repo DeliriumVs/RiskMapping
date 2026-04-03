@@ -135,7 +135,35 @@ CREATE TABLE votes_poker (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- =========================================================
--- 5. INSERTION DES DONNÉES PAR DÉFAUT
+-- 5. BIENS SUPPORTS (ATELIER 1)
+-- =========================================================
+
+CREATE TABLE biens_supports (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nom VARCHAR(200) NOT NULL,
+    type_bien ENUM(
+        'Logiciel / Application',
+        'Infrastructure réseau',
+        'Serveur / Cloud',
+        'Poste de travail',
+        'Personne / Équipe',
+        'Site / Local',
+        'Autre'
+    ) NOT NULL DEFAULT 'Autre',
+    description TEXT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE valeur_bien_support (
+    valeur_metier_id INT NOT NULL,
+    bien_support_id  INT NOT NULL,
+    PRIMARY KEY (valeur_metier_id, bien_support_id),
+    FOREIGN KEY (valeur_metier_id) REFERENCES valeurs_metier(id)   ON DELETE CASCADE,
+    FOREIGN KEY (bien_support_id)  REFERENCES biens_supports(id)   ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- =========================================================
+-- 6. INSERTION DES DONNÉES PAR DÉFAUT
 -- =========================================================
 
 INSERT INTO equipes (nom) VALUES 
@@ -156,7 +184,7 @@ INSERT INTO menaces (type_source, motivation, niveau_capacite) VALUES
 ('Hacktiviste', 'Idéologie / Dégradation d''image', 'Modérée');
 
 -- =========================================================
--- 6. SUIVI DES ACTIONS DE TRAITEMENT (PACS)
+-- 7. SUIVI DES ACTIONS DE TRAITEMENT (PACS)
 -- =========================================================
 CREATE TABLE actions_traitement (
     id INT AUTO_INCREMENT PRIMARY KEY,
