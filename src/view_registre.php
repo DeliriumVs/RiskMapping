@@ -177,14 +177,14 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'MJ') { die("Accès refus
     }
 
     // Lookup EBIOS RM : G=1 (Critique) à 4 (Mineure), V=1 (Très faible) à 4 (Très élevée)
-    const EBIOS_ZONE = {
+    var EBIOS_ZONE = {
         '1,1':'bg-medium','1,2':'bg-medium','1,3':'bg-high','1,4':'bg-high',
         '2,1':'bg-low',   '2,2':'bg-medium','2,3':'bg-high','2,4':'bg-high',
         '3,1':'bg-low',   '3,2':'bg-low',   '3,3':'bg-medium','3,4':'bg-high',
         '4,1':'bg-low',   '4,2':'bg-low',   '4,3':'bg-medium','4,4':'bg-medium',
     };
-    const EBIOS_RISK_CLASS  = { 'bg-high':'risk-high', 'bg-medium':'risk-medium', 'bg-low':'risk-low' };
-    const EBIOS_RISK_LABEL  = { 'bg-high':'Élevé',     'bg-medium':'Modéré',      'bg-low':'Faible'   };
+    var EBIOS_RISK_CLASS  = { 'bg-high':'risk-high', 'bg-medium':'risk-medium', 'bg-low':'risk-low' };
+    var EBIOS_RISK_LABEL  = { 'bg-high':'Élevé',     'bg-medium':'Modéré',      'bg-low':'Faible'   };
 
     function getEbiosZone(g, v) { return EBIOS_ZONE[`${g},${v}`] || 'bg-low'; }
 
