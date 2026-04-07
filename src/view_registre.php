@@ -296,7 +296,7 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'MJ') { die("Accès refus
                     <td style="font-size:0.78rem; color:#c9d1d9;">${s.nom_session}<br><span style="font-size:0.7rem; color:#8b949e;">${dateC}</span></td>
                     <td>
                         <span class="badge-traitement ${c_trait}" style="display:block; margin-bottom:5px;">${trait}</span>
-                        <button id="btn-toggle-${s.id}" onclick="toggleActions(${s.id}, this)" class="btn no-print" style="font-size: 0.75rem; background: #0d1117; border: 1px solid #3b82f6; color: #3b82f6; width: 100%; cursor: pointer;">📋 Plan d'action 🔽</button>
+                        <button id="btn-toggle-${s.id}" onclick="toggleActions(${s.id}, this)" class="btn no-print" style="font-size: 0.75rem; background: #0d1117; border: 1px solid #3b82f6; color: #3b82f6; display:block; cursor: pointer;">📋 Plan d'action 🔽</button>
                     </td>
                 `;
                 
