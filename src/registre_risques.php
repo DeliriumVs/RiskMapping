@@ -44,6 +44,12 @@ if ($has_active_session) {
         .nav-btn-danger { background: rgba(218, 41, 28, 0.1); color: #da291c; border-color: #da291c; }
         .nav-btn-danger:hover { background: #da291c; color: #fff; }
 
+        .nav-dropdown { position: relative; }
+        .nav-dropdown-menu { display: none; position: absolute; right: 0; top: calc(100% + 6px); background: #161b22; border: 1px solid #30363d; border-radius: 6px; min-width: 190px; z-index: 200; box-shadow: 0 8px 24px rgba(0,0,0,0.6); overflow: hidden; }
+        .nav-dropdown.open .nav-dropdown-menu { display: block; }
+        .nav-dropdown-menu .nav-btn-view { display: block; width: 100%; text-align: left; border: none; border-radius: 0; padding: 10px 16px; border-bottom: 1px solid #21262d; }
+        .nav-dropdown-menu .nav-btn-view:last-child { border-bottom: none; }
+
         .loader { border: 4px solid #f3f3f3; border-top: 4px solid #3b82f6; border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; margin: 50px auto; display: none; }
         
         .print-only { display: none; }
@@ -103,8 +109,14 @@ if ($has_active_session) {
 
             <div class="nav-group" style="margin-left: auto; border-right: none;">
                 <?php if ($admin_role === 'admin'): ?>
-                    <button class="nav-btn-view" data-target="admin_comptes.php" style="border-color: #8b949e; margin-right: 10px;">👤 Comptes</button>
-                    <button class="nav-btn-view" data-target="admin_audit.php" style="border-color: #8b949e; margin-right: 15px;">📜 Audit</button>
+                <div class="nav-dropdown" id="settings-dropdown" style="margin-right: 10px;">
+                    <button class="nav-btn-real" id="btn-settings" onclick="toggleSettingsDropdown(event)" style="border-color: #8b949e; color: #8b949e;">⚙️ Paramètres ▾</button>
+                    <div class="nav-dropdown-menu">
+                        <button class="nav-btn-view" data-target="admin_comptes.php">👤 Comptes</button>
+                        <button class="nav-btn-view" data-target="admin_audit.php">📜 Audit</button>
+                        <button class="nav-btn-view" data-target="admin_backup.php">💾 Sauvegardes</button>
+                    </div>
+                </div>
                 <?php endif; ?>
                 <button onclick="window.print()" class="nav-btn-real nav-btn-danger">📄 PDF</button>
                 <a href="export_global_csv.php" class="nav-btn-real" style="border-color: #107c41; color: #107c41;">🧮 CSV</a>
@@ -157,7 +169,20 @@ if ($has_active_session) {
                 viewButtons.forEach(btn => btn.classList.remove('active'));
                 this.classList.add('active');
                 loadContent(this.getAttribute('data-target'));
+                // Ferme le menu Paramètres si ouvert
+                const dd = document.getElementById('settings-dropdown');
+                if (dd) dd.classList.remove('open');
             });
+        });
+
+        function toggleSettingsDropdown(e) {
+            e.stopPropagation();
+            document.getElementById('settings-dropdown').classList.toggle('open');
+        }
+
+        document.addEventListener('click', function(e) {
+            const dd = document.getElementById('settings-dropdown');
+            if (dd && !dd.contains(e.target)) dd.classList.remove('open');
         });
 
         // Chargement de la vue par défaut
