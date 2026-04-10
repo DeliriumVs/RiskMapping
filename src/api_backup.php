@@ -11,18 +11,18 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'MJ' || ($_SESSION['admin
 // Ordre d'export (indépendants → dépendants)
 const EXPORT_TABLES = [
     'equipes', 'valeurs_metier', 'menaces', 'biens_supports', 'valeur_bien_support',
-    'objectifs_vises', 'admins', 'sessions', 'participants', 'scenarios_bruts',
+    'objectifs_vises', 'admin_users', 'sessions', 'participants', 'scenarios_bruts',
     'scenario_valeurs_metier', 'scenario_menaces', 'contributions', 'votes_poker',
-    'actions_plan', 'logs_audit'
+    'actions_traitement', 'audit_logs'
 ];
 
 // Ordre de suppression lors de l'import (plus dépendant en premier)
 const DELETE_ORDER = [
-    'logs_audit', 'actions_plan', 'votes_poker', 'contributions',
+    'audit_logs', 'actions_traitement', 'votes_poker', 'contributions',
     'scenario_menaces', 'scenario_valeurs_metier', 'scenarios_bruts',
     'participants', 'sessions', 'objectifs_vises', 'valeur_bien_support',
     'biens_supports', 'menaces', 'valeurs_metier', 'equipes'
-    // 'admins' volontairement absent : on ne remplace jamais les comptes à l'import
+    // 'admin_users' volontairement absent : on ne remplace jamais les comptes à l'import
 ];
 
 // ============================================================
@@ -117,7 +117,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_GET['action'] ?? '') === 'import
         // Insertion dans l'ordre des dépendances
         $inserted = 0;
         foreach (EXPORT_TABLES as $table) {
-            if ($table === 'admins') continue; // sécurité : on ne remplace jamais les comptes
+            if ($table === 'admin_users') continue; // sécurité : on ne remplace jamais les comptes
             if (!isset($backup['tables'][$table])) continue;
 
             $rows = $backup['tables'][$table];
