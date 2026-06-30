@@ -141,9 +141,37 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'MJ') { die("Accès refus
     <div style="color: #c9d1d9; font-weight: bold; font-size: 1.1rem; margin-top: 15px; margin-left: 80px;">Vraisemblance</div>
 </div>
 
+<!-- Formulaire d'ajout rapide -->
+<div id="form-add-scenario" class="no-print" style="display:none; background:#161b22; border:1px solid #3b82f6; border-radius:8px; padding:16px; margin-bottom:16px;">
+    <h4 style="color:#3b82f6; margin:0 0 12px 0;">➕ Nouveau scénario de risque</h4>
+    <div style="display:grid; grid-template-columns:2fr 1fr 1fr; gap:10px; margin-bottom:10px;">
+        <input type="text" id="new-titre" placeholder="Titre du scénario *" style="background:#0d1117; border:1px solid #30363d; color:#fff; padding:8px; border-radius:4px;">
+        <select id="new-impact" style="background:#0d1117; border:1px solid #30363d; color:#c9d1d9; padding:8px; border-radius:4px;">
+            <option value="0">Gravité (optionnel)</option>
+            <option value="1">1 — Critique</option>
+            <option value="2">2 — Grave</option>
+            <option value="3">3 — Significative</option>
+            <option value="4">4 — Mineure</option>
+        </select>
+        <select id="new-vrai" style="background:#0d1117; border:1px solid #30363d; color:#c9d1d9; padding:8px; border-radius:4px;">
+            <option value="0">Vraisemblance (optionnel)</option>
+            <option value="1">1 — Très faible</option>
+            <option value="2">2 — Faible</option>
+            <option value="3">3 — Élevée</option>
+            <option value="4">4 — Très élevée</option>
+        </select>
+    </div>
+    <textarea id="new-desc" placeholder="Description (optionnel)" style="width:100%; box-sizing:border-box; background:#0d1117; border:1px solid #30363d; color:#fff; padding:8px; border-radius:4px; resize:vertical; height:60px; margin-bottom:10px;"></textarea>
+    <div style="display:flex; gap:8px;">
+        <button onclick="createScenario()" style="background:#3b82f6; border:none; color:#fff; padding:8px 18px; border-radius:4px; cursor:pointer; font-weight:bold;">Créer le scénario</button>
+        <button onclick="document.getElementById('form-add-scenario').style.display='none'" style="background:#30363d; border:none; color:#8b949e; padding:8px 14px; border-radius:4px; cursor:pointer;">Annuler</button>
+    </div>
+</div>
+
 <div class="page-break-before" style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: 30px; margin-bottom: 10px;">
-    <h3 class="print-title-dark" style="color: var(--accent-green); margin: 0;">Plan d'Action / Risques Traités</h3>
+    <h3 class="print-title-dark" style="color: var(--accent-green); margin: 0;">Registre des Risques</h3>
     <div style="display: flex; gap: 10px;">
+        <button id="btn-add-scenario" onclick="document.getElementById('form-add-scenario').style.display='block'; this.style.display='none';" class="btn no-print" style="background: rgba(34,197,94,0.15); border: 1px solid #22c55e; color: #22c55e; padding: 5px 12px; font-size: 0.8rem; border-radius: 4px; cursor: pointer;">➕ Ajouter un scénario</button>
         <button id="btn-toggle-all" onclick="toggleAllActions()" class="btn no-print" style="background: #3b82f6; border: none; color: #fff; padding: 5px 10px; font-size: 0.8rem; border-radius: 4px; cursor: pointer;">📂 Tout déplier</button>
         <button onclick="resetOrder()" class="btn no-print" style="background: transparent; border: 1px solid #8b949e; color: #8b949e; padding: 5px 10px; font-size: 0.8rem; border-radius: 4px; cursor: pointer;">🔄 Réinitialiser le tri</button>
     </div>
@@ -244,7 +272,7 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'MJ') { die("Accès refus
                 <th>Gravité</th>
                 <th>Vraisemblance</th>
                 <th>Niveau</th>
-                <th style="width: 100px;">Atelier</th>
+                <th style="width: 80px;">Date</th>
                 <th style="width: 18%;">Traitement & Plan d'Action</th>`;
             if (json.user_role !== 'lecteur') thHtml += `<th class="no-print">Actions</th>`;
             thead.innerHTML = thHtml;
@@ -293,7 +321,7 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'MJ') { die("Accès refus
                     <td><strong>${imp}</strong></td>
                     <td><strong>${vrai}</strong></td>
                     <td><span class="badge-risk ${c_risk}">${riskLabel}</span></td>
-                    <td style="font-size:0.78rem; color:#c9d1d9;">${s.nom_session}<br><span style="font-size:0.7rem; color:#8b949e;">${dateC}</span></td>
+                    <td style="font-size:0.78rem; color:#8b949e;">${dateC}</td>
                     <td>
                         <span class="badge-traitement ${c_trait}" style="display:block; margin-bottom:5px;">${trait}</span>
                         <button id="btn-toggle-${s.id}" onclick="toggleActions(${s.id}, this)" class="btn no-print" style="font-size: 0.75rem; background: #0d1117; border: 1px solid #3b82f6; color: #3b82f6; display:block; cursor: pointer;">📋 Plan d'action 🔽</button>
@@ -568,6 +596,35 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'MJ') { die("Accès refus
             localStorage.removeItem('riskmapping_order');
             loadRegistre();
         }
+    }
+
+    async function createScenario() {
+        const titre = document.getElementById('new-titre').value.trim();
+        if (!titre) { alert('Le titre est obligatoire.'); return; }
+        const impact = parseInt(document.getElementById('new-impact').value) || 0;
+        const vrai   = parseInt(document.getElementById('new-vrai').value) || 0;
+        const desc   = document.getElementById('new-desc').value.trim();
+
+        try {
+            const res  = await fetch(apiRegistre, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({titre, description: desc, impact_estime: impact, vraisemblance_estimee: vrai})
+            });
+            const json = await res.json();
+            if (json.status === 'success') {
+                document.getElementById('form-add-scenario').style.display = 'none';
+                document.getElementById('btn-add-scenario').style.display = 'inline-block';
+                document.getElementById('new-titre').value = '';
+                document.getElementById('new-desc').value  = '';
+                document.getElementById('new-impact').value = '0';
+                document.getElementById('new-vrai').value   = '0';
+                showMsgReg(json.message);
+                loadRegistre();
+            } else {
+                showMsgReg(json.message, true);
+            }
+        } catch(e) { showMsgReg("Erreur réseau.", true); }
     }
 
     loadRegistre();
