@@ -165,14 +165,14 @@ label.a3 { display:block; font-size:0.75rem; color:#8b949e; margin-bottom:4px; }
                 <thead>
                     <tr>
                         <th>ID</th><th>Nom</th><th>Type</th>
-                        <th title="Dépendance de l'org. vis-à-vis de cette PP">Dép.</th>
-                        <th title="Niveau d'accès/pénétration de la PP dans le SI">Pén.</th>
-                        <th>→ Exposition</th>
-                        <th title="Maturité cyber de la PP">Mat.</th>
-                        <th title="Niveau de confiance accordé à la PP">Conf.</th>
-                        <th>→ Fiabilité</th>
-                        <th>⚠ Niveau Menace</th>
-                        <?php if ($admin_role !== 'lecteur'): ?><th>Action</th><?php endif; ?>
+                        <th title="Niveau de dépendance de l'organisation vis-à-vis de cette Partie Prenante">Dépendance</th>
+                        <th title="Niveau de pénétration / d'accès de la Partie Prenante dans le système d'information">Pénétration</th>
+                        <th title="Résulte de Dépendance × Pénétration">Exposition</th>
+                        <th title="Maturité en cybersécurité de la Partie Prenante">Maturité cyber</th>
+                        <th title="Niveau de confiance accordé à la Partie Prenante">Confiance</th>
+                        <th title="Moyenne de Maturité cyber et Confiance">Fiabilité</th>
+                        <th title="Niveau de menace que représente cette PP, combinant Exposition et Fiabilité">Niveau de menace</th>
+                        <?php if ($admin_role !== 'lecteur'): ?><th></th><?php endif; ?>
                     </tr>
                 </thead>
                 <tbody id="pp-tbody">
@@ -227,7 +227,7 @@ label.a3 { display:block; font-size:0.75rem; color:#8b949e; margin-bottom:4px; }
                 <div class="ml-item"><div class="ml-dot lvl-2"></div>2 — Limité</div>
                 <div class="ml-item"><div class="ml-dot lvl-1"></div>1 — Négligeable</div>
                 <div style="margin-top:20px; color:#484f58; font-size:0.78rem; line-height:1.6;">
-                    La cellule indique le niveau d'exposition brut (Dép. × Pén.).<br>
+                    La cellule indique le niveau d'exposition brut (Dépendance × Pénétration).<br>
                     La couleur du badge tient compte de la fiabilité de la PP.
                 </div>
                 <div id="matrix-legend-pps" style="margin-top:16px;"></div>
@@ -534,6 +534,12 @@ label.a3 { display:block; font-size:0.75rem; color:#8b949e; margin-bottom:4px; }
                 ? '<span class="ss-stat '+stat.cls+'" onclick="cycleSS('+ss.id+',\''+stat.next+'\')" title="Cliquer pour changer">'+stat.label+'</span>'
                 : '<span class="ss-stat '+stat.cls+'">'+stat.label+'</span>';
             var delBtn = IS_ADMIN ? '<button class="ss-del" onclick="deleteSS('+ss.id+')" title="Supprimer">🗑</button>' : '';
+            var registreEl = '';
+            if (ss.registre_id) {
+                registreEl = '<span style="font-size:0.7rem;padding:2px 8px;border-radius:10px;background:rgba(34,197,94,0.12);color:#22c55e;border:1px solid rgba(34,197,94,0.3);white-space:nowrap;" title="Entrée R'+String(ss.registre_id).padStart(3,\'0\')+' dans le Registre">✓ Dans le registre</span>';
+            } else if (CAN_EDIT && ss.statut === 'retenu') {
+                registreEl = '<button onclick="transferSS('+ss.id+')" style="font-size:0.7rem;padding:2px 9px;border-radius:4px;background:rgba(167,139,250,0.1);color:#a78bfa;border:1px solid rgba(167,139,250,0.35);cursor:pointer;white-space:nowrap;" title="Ajouter ce scénario au Registre des Risques">→ Envoyer au registre</button>';
+            }
             return '<div class="ss-card">' +
                 '<span class="ss-id">' + esc(ssId) + '</span>' +
                 '<div class="ss-body">' +
@@ -546,7 +552,7 @@ label.a3 { display:block; font-size:0.75rem; color:#8b949e; margin-bottom:4px; }
                     (ss.description ? '<div class="ss-desc">' + esc(ss.description) + '</div>' : '') +
                 '</div>' +
                 '<div class="ss-right">' +
-                    statBtn + gravHtml + vraiHtml + delBtn +
+                    statBtn + gravHtml + vraiHtml + registreEl + delBtn +
                 '</div>' +
             '</div>';
         }).join('');
@@ -583,6 +589,14 @@ label.a3 { display:block; font-size:0.75rem; color:#8b949e; margin-bottom:4px; }
     window.deleteSS = async function(id) {
         if (!confirm('Supprimer ce scénario stratégique ?')) return;
         var res  = await fetch(API_SS, {method:'DELETE',headers:{'Content-Type':'application/json'},body:JSON.stringify({id})});
+        var json = await res.json();
+        showMsg(json.message, json.status==='success');
+        if (json.status==='success') loadSS();
+    };
+
+    window.transferSS = async function(id) {
+        if (!confirm('Envoyer ce scénario stratégique dans le Registre des Risques ?\n\nIl sera ajouté comme nouvelle entrée, qualifiable et enrichissable depuis le Registre.')) return;
+        var res  = await fetch(API_SS, {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'transfer',id})});
         var json = await res.json();
         showMsg(json.message, json.status==='success');
         if (json.status==='success') loadSS();

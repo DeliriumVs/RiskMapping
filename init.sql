@@ -154,6 +154,8 @@ CREATE TABLE scenarios_bruts (
     titre_technique VARCHAR(255) NULL,
     scenario_technique TEXT NULL,
     traitement_updated_at TIMESTAMP NULL,
+    source_atelier ENUM('manuel','atelier3','atelier4') NOT NULL DEFAULT 'manuel',
+    source_id      INT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (analyse_id) REFERENCES analyses(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

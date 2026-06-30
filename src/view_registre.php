@@ -316,11 +316,15 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'MJ') { die("Accès refus
                     ? `<strong style="color:#a78bfa;">${s.titre_technique}</strong><br>${buildQualBadge(s, json.user_role)}`
                     : buildQualBadge(s, json.user_role);
 
+                const srcBadge = (s.source_atelier && s.source_atelier !== 'manuel')
+                    ? `<br><span style="font-size:0.62rem;padding:1px 6px;border-radius:3px;background:rgba(167,139,250,0.12);color:#a78bfa;border:1px solid rgba(167,139,250,0.3);display:inline-block;margin-top:3px;">🗺️ Scénario stratégique (A3)</span>`
+                    : '';
+
                 let html = `
                     <td class="drag-handle no-print" style="vertical-align: middle;">⣿</td>
                     <td style="vertical-align: middle;"><span class="risk-dot">${s.visual_id}</span></td>
                     <td>${techniqueTd}</td>
-                    <td><strong>${s.titre}</strong></td>
+                    <td><strong>${s.titre}</strong>${srcBadge}</td>
                     <td><strong>${imp}</strong></td>
                     <td><strong>${vrai}</strong></td>
                     <td><span class="badge-risk ${c_risk}">${riskLabel}</span></td>

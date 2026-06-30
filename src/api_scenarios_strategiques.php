@@ -22,11 +22,13 @@ try {
                    ss.description, ss.gravite, ss.vraisemblance, ss.statut, ss.created_at,
                    m.type_source  AS sr_nom,
                    pp.nom         AS pp_nom, pp.type_pp,
-                   ov.description AS ov_desc
+                   ov.description AS ov_desc,
+                   sb.id          AS registre_id
             FROM scenarios_strategiques ss
             JOIN menaces           m  ON m.id  = ss.menace_id
             JOIN parties_prenantes pp ON pp.id = ss.pp_id
             LEFT JOIN objectifs_vises ov ON ov.id = ss.ov_id
+            LEFT JOIN scenarios_bruts sb ON sb.source_atelier='atelier3' AND sb.source_id=ss.id AND sb.analyse_id=ss.analyse_id
             WHERE ss.analyse_id = ?
             ORDER BY ss.id ASC
         ");
@@ -51,10 +53,50 @@ try {
         exit;
     }
 
-    // ── POST : créer ──────────────────────────────────────────────
+    // ── POST : créer ou transférer vers le Registre ──────────────
     if ($method === 'POST') {
         if ($admin_role === 'lecteur') { http_response_code(403); echo json_encode(['status'=>'error','message'=>'Droits insuffisants.']); exit; }
-        $i         = json_decode(file_get_contents('php://input'), true);
+        $i = json_decode(file_get_contents('php://input'), true);
+
+        // ── Transfert vers le Registre des Risques ────────────────
+        if (($i['action'] ?? '') === 'transfer') {
+            $ss_id = (int)($i['id'] ?? 0);
+            if (!$ss_id) { http_response_code(400); echo json_encode(['status'=>'error','message'=>'ID invalide.']); exit; }
+
+            // Déjà transféré ?
+            $chk = $pdo->prepare("SELECT id FROM scenarios_bruts WHERE source_atelier='atelier3' AND source_id=? AND analyse_id=?");
+            $chk->execute([$ss_id, $analyse_id]);
+            if ($chk->fetchColumn()) {
+                echo json_encode(['status'=>'error','message'=>'Ce scénario est déjà présent dans le Registre des Risques.']); exit;
+            }
+
+            // Récupérer les détails du scénario stratégique
+            $stmt2 = $pdo->prepare("
+                SELECT ss.*, m.type_source, pp.nom AS pp_nom, ov.description AS ov_desc
+                FROM scenarios_strategiques ss
+                JOIN menaces m ON m.id = ss.menace_id
+                JOIN parties_prenantes pp ON pp.id = ss.pp_id
+                LEFT JOIN objectifs_vises ov ON ov.id = ss.ov_id
+                WHERE ss.id=? AND ss.analyse_id=?
+            ");
+            $stmt2->execute([$ss_id, $analyse_id]);
+            $ss = $stmt2->fetch();
+            if (!$ss) { http_response_code(404); echo json_encode(['status'=>'error','message'=>'Scénario stratégique introuvable.']); exit; }
+
+            $ssLabel = 'SS-' . str_pad($ss_id, 3, '0', STR_PAD_LEFT);
+            $titre   = $ssLabel . ' — ' . $ss['type_source'] . ' via ' . $ss['pp_nom'];
+            if (!empty($ss['ov_desc'])) $titre .= ' → ' . $ss['ov_desc'];
+            if (mb_strlen($titre) > 255) $titre = mb_substr($titre, 0, 252) . '…';
+
+            $pdo->prepare("INSERT INTO scenarios_bruts (analyse_id,titre,description,impact_estime,vraisemblance_estimee,source_atelier,source_id) VALUES (?,?,?,?,?,?,?)")
+                ->execute([$analyse_id, $titre, $ss['description'] ?? '', (int)($ss['gravite'] ?? 0), (int)($ss['vraisemblance'] ?? 0), 'atelier3', $ss_id]);
+
+            $new_id = (int)$pdo->lastInsertId();
+            log_audit($pdo, $_SESSION['admin_id'], 'SS_TRANSFERRED', "SS #$ss_id transféré au Registre → R#$new_id");
+            echo json_encode(['status'=>'success','message'=>'Scénario stratégique ajouté au Registre des Risques (R' . str_pad($new_id,3,'0',STR_PAD_LEFT) . ').','registre_id'=>$new_id]);
+            exit;
+        }
+
         $menace_id = (int)($i['menace_id'] ?? 0);
         $pp_id     = (int)($i['pp_id']     ?? 0);
         $ov_id     = !empty($i['ov_id']) ? (int)$i['ov_id'] : null;
