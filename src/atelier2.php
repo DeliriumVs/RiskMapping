@@ -80,8 +80,8 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'MJ') {
 .f-full   { margin-bottom:10px; }
 .btn-add    { background:#3b82f6; border:none; color:#fff; padding:7px 16px; border-radius:4px; cursor:pointer; font-size:0.85rem; }
 .btn-cancel { background:#30363d; border:none; color:#8b949e; padding:7px 12px; border-radius:4px; cursor:pointer; font-size:0.85rem; }
-.btn-toggle { background:transparent; border:1px dashed #30363d; color:#8b949e; padding:5px 12px; border-radius:4px; cursor:pointer; font-size:0.8rem; margin:10px 16px; }
-.btn-toggle:hover { border-color:#3b82f6; color:#3b82f6; }
+.btn-toggle { background:rgba(59,130,246,0.08); border:1px solid rgba(59,130,246,0.4); color:#3b82f6; padding:5px 14px; border-radius:4px; cursor:pointer; font-size:0.82rem; white-space:nowrap; }
+.btn-toggle:hover { background:rgba(59,130,246,0.18); border-color:#3b82f6; }
 
 .msg-atl2 { display:none; padding:8px 12px; border-radius:4px; margin-bottom:12px; font-size:0.85rem; }
 .ov-filter-banner { padding:8px 16px; font-size:0.8rem; color:#8b949e; background:#0d1117; border-bottom:1px solid #1c2128; display:flex; align-items:center; gap:8px; }
@@ -91,7 +91,7 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'MJ') {
 <div style="padding:20px 20px 12px; background:#161b22; border-radius:8px 8px 0 0; border:1px solid #30363d; border-bottom:none; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;">
     <div>
         <div style="color:#fff; font-size:1.2rem; font-weight:bold;">🔗 Atelier 2 — Sources de Risque & Objectifs Visés</div>
-        <div style="color:#8b949e; font-size:0.82rem; margin-top:3px;">Notation M·R·A (1 Faible / 2 Moyen / 3 Élevé) — cliquer un badge pour modifier · cliquer une SR pour filtrer ses OV</div>
+        <div style="color:#8b949e; font-size:0.82rem; margin-top:3px;">Cliquer un badge <strong style="color:#c9d1d9;">M·R·A</strong> pour noter une SR · Cliquer <strong style="color:#c9d1d9;">Pertinence ↻</strong> pour qualifier un OV · Cliquer une SR pour filtrer ses OV</div>
     </div>
     <?php if ($admin_role !== 'lecteur'): ?>
     <button id="btn-seed" onclick="seedEBIOS()" style="background:rgba(245,158,11,0.1); border:1px solid #f59e0b; color:#f59e0b; padding:7px 14px; border-radius:6px; cursor:pointer; font-size:0.82rem; white-space:nowrap;" title="Insérer les 8 SR et 17 OV du référentiel officiel EBIOS RM ANSSI">
@@ -274,8 +274,8 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'MJ') {
         };
         var cfg = map[ov.pertinence] || map['A évaluer'];
         if (!CAN_EDIT) return '<span class="ov-pert ' + cfg.cls + '">' + cfg.label + '</span>';
-        return '<span class="ov-pert ' + cfg.cls + '" onclick="cyclePert(' + ov.id + ',\'' + esc(cfg.next) + '\')" title="Cliquer pour changer">' +
-            cfg.label + '</span>';
+        return '<span class="ov-pert ' + cfg.cls + '" onclick="cyclePert(' + ov.id + ',\'' + esc(cfg.next) + '\')" title="Cliquer pour changer la pertinence">' +
+            cfg.label + ' ↻</span>';
     }
 
     function ovItem(ov) {

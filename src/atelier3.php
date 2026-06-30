@@ -349,9 +349,20 @@ label.a3 { display:block; font-size:0.75rem; color:#8b949e; margin-bottom:4px; }
 
     // ── PP ──────────────────────────────────────────────────────
     async function loadPP() {
-        var res  = await fetch(API_PP);
-        var json = await res.json();
-        allPPs = (json.status === 'success') ? json.data : [];
+        try {
+            var res  = await fetch(API_PP);
+            var json = await res.json();
+            if (json.status !== 'success') {
+                var tb = document.getElementById('pp-tbody');
+                if (tb) tb.innerHTML = '<tr><td colspan="11" style="text-align:center;padding:20px;color:#f59e0b;">⚠ ' + (json.message || 'Erreur serveur') + '<br><small style="color:#8b949e;">Si les tables n\'existent pas encore, relancez Docker : docker compose down -v &amp;&amp; docker compose up -d</small></td></tr>';
+                return;
+            }
+            allPPs = json.data;
+        } catch(e) {
+            var tb = document.getElementById('pp-tbody');
+            if (tb) tb.innerHTML = '<tr><td colspan="11" style="text-align:center;padding:20px;color:#da291c;">Erreur de connexion à l\'API Parties Prenantes.</td></tr>';
+            return;
+        }
         renderPP();
     }
 
@@ -536,7 +547,7 @@ label.a3 { display:block; font-size:0.75rem; color:#8b949e; margin-bottom:4px; }
             var delBtn = IS_ADMIN ? '<button class="ss-del" onclick="deleteSS('+ss.id+')" title="Supprimer">🗑</button>' : '';
             var registreEl = '';
             if (ss.registre_id) {
-                registreEl = '<span style="font-size:0.7rem;padding:2px 8px;border-radius:10px;background:rgba(34,197,94,0.12);color:#22c55e;border:1px solid rgba(34,197,94,0.3);white-space:nowrap;" title="Entrée R'+String(ss.registre_id).padStart(3,\'0\')+' dans le Registre">✓ Dans le registre</span>';
+                registreEl = '<span style="font-size:0.7rem;padding:2px 8px;border-radius:10px;background:rgba(34,197,94,0.12);color:#22c55e;border:1px solid rgba(34,197,94,0.3);white-space:nowrap;" title="Entrée R'+String(ss.registre_id).padStart(3,'0')+' dans le Registre">✓ Dans le registre</span>';
             } else if (CAN_EDIT && ss.statut === 'retenu') {
                 registreEl = '<button onclick="transferSS('+ss.id+')" style="font-size:0.7rem;padding:2px 9px;border-radius:4px;background:rgba(167,139,250,0.1);color:#a78bfa;border:1px solid rgba(167,139,250,0.35);cursor:pointer;white-space:nowrap;" title="Ajouter ce scénario au Registre des Risques">→ Envoyer au registre</button>';
             }
