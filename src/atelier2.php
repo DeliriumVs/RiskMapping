@@ -73,11 +73,16 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'MJ') {
 .empty-state { padding:20px; text-align:center; color:#484f58; font-size:0.85rem; font-style:italic; }
 </style>
 
-<div style="padding:20px 20px 12px; background:#161b22; border-radius:8px 8px 0 0; border:1px solid #30363d; border-bottom:none; display:flex; align-items:center; justify-content:space-between;">
+<div style="padding:20px 20px 12px; background:#161b22; border-radius:8px 8px 0 0; border:1px solid #30363d; border-bottom:none; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;">
     <div>
         <div style="color:#fff; font-size:1.2rem; font-weight:bold;">🔗 Atelier 2 — Sources de Risque & Objectifs Visés</div>
         <div style="color:#8b949e; font-size:0.82rem; margin-top:3px;">Notation Motivation · Ressources · Activité (1 Faible / 2 Moyen / 3 Élevé) — cliquer un badge pour modifier</div>
     </div>
+    <?php if ($admin_role !== 'lecteur'): ?>
+    <button id="btn-seed" onclick="seedEBIOS()" style="background:rgba(245,158,11,0.1); border:1px solid #f59e0b; color:#f59e0b; padding:7px 14px; border-radius:6px; cursor:pointer; font-size:0.82rem; white-space:nowrap;" title="Insérer les 8 SR et 17 OV du référentiel officiel EBIOS RM ANSSI">
+        🎲 Pré-remplir EBIOS RM
+    </button>
+    <?php endif; ?>
 </div>
 <div style="background:#161b22; border:1px solid #30363d; border-top:none; border-radius:0 0 8px 8px; padding:16px;">
     <div class="msg-atl2" id="msg-atl2"></div>
@@ -508,6 +513,47 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'MJ') {
     window.toggleFormOV = function() {
         var f = document.getElementById('form-ov');
         f.style.display = f.style.display === 'none' ? 'block' : 'none';
+    };
+
+    // ─────────────────────────────────────────────
+    // PRÉ-REMPLISSAGE EBIOS RM
+    // ─────────────────────────────────────────────
+    window.seedEBIOS = async function() {
+        var hasSR    = allSRs.length > 0;
+        var replace  = false;
+
+        if (hasSR) {
+            var choice = confirm(
+                'Des Sources de Risque existent déjà dans cette analyse (' + allSRs.length + ' SR).\n\n' +
+                'Cliquez OK pour REMPLACER toutes les SR et OV existantes par le référentiel officiel EBIOS RM.\n' +
+                'Cliquez Annuler pour ajouter seulement les SR manquantes (sans doublon).'
+            );
+            if (choice === null) return;
+            replace = choice;
+        } else {
+            if (!confirm('Pré-remplir avec les 8 Sources de Risque et 17 Objectifs Visés officiels du référentiel EBIOS RM (ANSSI) ?')) return;
+        }
+
+        var btn = document.getElementById('btn-seed');
+        if (btn) { btn.disabled = true; btn.textContent = '⏳ Insertion…'; }
+
+        try {
+            var res  = await fetch('api_seed_atelier2.php', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ replace: replace })
+            });
+            var json = await res.json();
+            showMsg(json.message, json.status === 'success');
+            if (json.status === 'success') {
+                selectedSRId = null;
+                load();
+            }
+        } catch(e) {
+            showMsg('Erreur réseau.', false);
+        } finally {
+            if (btn) { btn.disabled = false; btn.textContent = '🎲 Pré-remplir EBIOS RM'; }
+        }
     };
 
     load();
