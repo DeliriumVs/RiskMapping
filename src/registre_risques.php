@@ -113,15 +113,9 @@ $bs = $badge_statut_map[$analyse_statut] ?? ['label'=>$analyse_statut,'color'=>'
 
             <?php if ($admin_role === 'admin' || $admin_role === 'animateur'): ?>
             <div class="nav-group">
-                <span class="nav-title">Référentiels</span>
-                <button class="nav-btn-view" data-target="admin_valeurs.php">💎 Valeurs Métier</button>
-                <button class="nav-btn-view" data-target="admin_biens_supports.php">🔷 Biens Supports</button>
-                <button class="nav-btn-view" data-target="admin_menaces.php">🦹 Sources de Risque</button>
-                <button class="nav-btn-view" data-target="admin_objectifs_vises.php">🎯 Objectifs Visés</button>
-            </div>
-            <div class="nav-group">
                 <span class="nav-title">Ateliers</span>
-                <button class="nav-btn-view" data-target="atelier1.php">📋 Atelier 1</button>
+                <button class="nav-btn-view" data-target="atelier1.php" title="Valeurs Métier · Événements Redoutés · Biens Supports">📋 Atelier 1</button>
+                <button class="nav-btn-view" data-target="atelier2.php" title="Sources de Risque · Objectifs Visés · Notation">🔗 Atelier 2</button>
             </div>
             <div class="nav-group">
                 <span class="nav-title">Organisation</span>

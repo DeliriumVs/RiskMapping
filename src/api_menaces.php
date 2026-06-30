@@ -33,10 +33,9 @@ try {
             echo json_encode(["status" => "error", "message" => "Droits insuffisants."]);
             exit;
         }
-        $input = json_decode(file_get_contents('php://input'), true);
-        $type  = trim($input['type_source']     ?? '');
-        $motiv = trim($input['motivation']      ?? '');
-        $capa  = trim($input['niveau_capacite'] ?? '');
+        $input  = json_decode(file_get_contents('php://input'), true);
+        $type   = trim($input['type_source'] ?? '');
+        $motiv  = trim($input['motivation']  ?? '');
 
         if (empty($type)) {
             http_response_code(400);
@@ -44,11 +43,41 @@ try {
             exit;
         }
 
-        $pdo->prepare("INSERT INTO menaces (analyse_id, type_source, motivation, niveau_capacite) VALUES (?, ?, ?, ?)")
-            ->execute([$analyse_id, $type, $motiv, $capa]);
+        $m_note = isset($input['motivation_note']) ? max(1, min(3, (int)$input['motivation_note'])) : null;
+        $r_note = isset($input['ressources_note']) ? max(1, min(3, (int)$input['ressources_note'])) : null;
+        $a_note = isset($input['activite_note'])   ? max(1, min(3, (int)$input['activite_note']))   : null;
+
+        $pdo->prepare("INSERT INTO menaces (analyse_id, type_source, motivation, motivation_note, ressources_note, activite_note) VALUES (?, ?, ?, ?, ?, ?)")
+            ->execute([$analyse_id, $type, $motiv, $m_note, $r_note, $a_note]);
 
         log_audit($pdo, $_SESSION['admin_id'], 'THREAT_ADDED', "Source de risque ajoutée : $type");
-        echo json_encode(["status" => "success", "message" => "Source de risque ajoutée."]);
+        echo json_encode(["status" => "success", "message" => "Source de risque ajoutée.", "id" => (int)$pdo->lastInsertId()]);
+        exit;
+    }
+
+    if ($method === 'PATCH') {
+        if ($admin_role === 'lecteur') {
+            http_response_code(403);
+            echo json_encode(["status" => "error", "message" => "Droits insuffisants."]);
+            exit;
+        }
+        $input   = json_decode(file_get_contents('php://input'), true);
+        $id      = (int)($input['id'] ?? 0);
+        $field   = $input['field']  ?? '';
+        $value   = array_key_exists('value', $input) ? $input['value'] : null;
+
+        $allowed = ['motivation_note', 'ressources_note', 'activite_note'];
+        if (!$id || !in_array($field, $allowed, true)) {
+            http_response_code(400);
+            echo json_encode(["status" => "error", "message" => "Champ ou ID invalide."]);
+            exit;
+        }
+
+        $sanitized = $value === null ? null : max(1, min(3, (int)$value));
+        $pdo->prepare("UPDATE menaces SET $field=? WHERE id=? AND analyse_id=?")
+            ->execute([$sanitized, $id, $analyse_id]);
+
+        echo json_encode(["status" => "success", "message" => "Note mise à jour."]);
         exit;
     }
 

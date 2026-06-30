@@ -72,10 +72,12 @@ CREATE TABLE valeurs_metier (
 
 CREATE TABLE menaces (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    analyse_id INT NOT NULL,
-    type_source VARCHAR(100) NOT NULL,
-    motivation VARCHAR(150),
-    niveau_capacite VARCHAR(50),
+    analyse_id      INT NOT NULL,
+    type_source     VARCHAR(100) NOT NULL,
+    motivation      VARCHAR(255) NULL,
+    motivation_note TINYINT NULL DEFAULT NULL COMMENT '1=Faible 2=Moyen 3=Élevé',
+    ressources_note TINYINT NULL DEFAULT NULL COMMENT '1=Faible 2=Moyen 3=Élevé',
+    activite_note   TINYINT NULL DEFAULT NULL COMMENT '1=Faible 2=Moyen 3=Élevé (optionnel)',
     FOREIGN KEY (analyse_id) REFERENCES analyses(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -203,11 +205,11 @@ INSERT INTO valeurs_metier (analyse_id, nom, critere_impacte, description) VALUE
 (1, 'Image de marque',           'Image',          'Réputation sur le marché et confiance des partenaires'),
 (1, 'Code source / R&D',         'Confidentialité','Propriété intellectuelle et avantage concurrentiel');
 
-INSERT INTO menaces (analyse_id, type_source, motivation, niveau_capacite) VALUES
-(1, 'Cybercriminel (Ransomware)',    'Appât du gain / Extorsion',       'Élevée'),
-(1, 'Employé malveillant',           'Vengeance / Sabotage',             'Standard'),
-(1, 'Concurrent déloyal',            'Espionnage industriel',            'Élevée'),
-(1, 'Hacktiviste',                   'Idéologie / Dégradation d''image', 'Modérée');
+INSERT INTO menaces (analyse_id, type_source, motivation, motivation_note, ressources_note, activite_note) VALUES
+(1, 'Cybercriminel (Ransomware)',    'Appât du gain / Extorsion',        3, 2, NULL),
+(1, 'Employé malveillant',           'Vengeance / Sabotage interne',     2, 1, NULL),
+(1, 'Concurrent déloyal',            'Espionnage industriel',             2, 3, 1),
+(1, 'Hacktiviste',                   'Idéologie / Dégradation d''image', 3, 1, NULL);
 
 -- Événements Redoutés (exemples liés aux VM ci-dessus : VM id 1-4, analyse 1)
 INSERT INTO evenements_redoutes (analyse_id, valeur_metier_id, categorie, description, impact, notes) VALUES

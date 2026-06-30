@@ -113,10 +113,49 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'MJ') {
     </div>
 
     <!-- BS section -->
-    <div class="bs-section">
-        <h4 style="color:#0ea5e9; margin-bottom:12px; border-top:1px solid #30363d; padding-top:20px;">🔷 Biens Supports associés</h4>
-        <p style="color:#8b949e; font-size:0.85rem; margin-bottom:12px;">Actifs techniques et organisationnels qui supportent les Valeurs Métier. Gérez-les via le menu Référentiels → Biens Supports.</p>
-        <div id="bs-summary">
+    <div style="margin-top:32px; border-top:1px solid #30363d; padding-top:24px;">
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;">
+            <h4 style="color:#0ea5e9; margin:0;">🔷 Biens Supports</h4>
+            <?php if ($admin_role !== 'lecteur'): ?>
+            <button onclick="toggleAddBS()" style="background:rgba(14,165,233,0.1); border:1px solid #0ea5e9; color:#0ea5e9; padding:5px 12px; border-radius:5px; cursor:pointer; font-size:0.82rem;">➕ Ajouter un BS</button>
+            <?php endif; ?>
+        </div>
+        <p style="color:#8b949e; font-size:0.82rem; margin:0 0 14px 0;">Actifs techniques et organisationnels qui supportent les Valeurs Métier.</p>
+
+        <?php if ($admin_role !== 'lecteur'): ?>
+        <div id="form-add-bs" style="display:none; background:#0d1117; border:1px solid #30363d; border-radius:8px; padding:16px; margin-bottom:14px;">
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:12px;">
+                <div>
+                    <label style="display:block; font-size:0.75rem; color:#8b949e; margin-bottom:4px;">Nom *</label>
+                    <input type="text" id="bs-nom" placeholder="Ex: Serveur AD, VPN…" style="width:100%; box-sizing:border-box; background:#161b22; border:1px solid #30363d; color:#c9d1d9; padding:8px; border-radius:4px;">
+                </div>
+                <div>
+                    <label style="display:block; font-size:0.75rem; color:#8b949e; margin-bottom:4px;">Type</label>
+                    <select id="bs-type" style="width:100%; background:#161b22; border:1px solid #30363d; color:#c9d1d9; padding:8px; border-radius:4px;">
+                        <option>Logiciel / Application</option><option>Infrastructure réseau</option>
+                        <option>Serveur / Cloud</option><option>Poste de travail</option>
+                        <option>Personne / Équipe</option><option>Site / Local</option><option>Autre</option>
+                    </select>
+                </div>
+                <div style="grid-column:1/-1;">
+                    <label style="display:block; font-size:0.75rem; color:#8b949e; margin-bottom:4px;">Description (optionnel)</label>
+                    <input type="text" id="bs-desc" placeholder="Ex: Contrôleur de domaine principal, hébergé on-premise" style="width:100%; box-sizing:border-box; background:#161b22; border:1px solid #30363d; color:#c9d1d9; padding:8px; border-radius:4px;">
+                </div>
+                <div style="grid-column:1/-1;">
+                    <label style="display:block; font-size:0.75rem; color:#8b949e; margin-bottom:6px;">Valeurs Métier supportées</label>
+                    <div id="bs-vm-cbs" style="display:flex; flex-wrap:wrap; gap:7px; background:#161b22; border:1px solid #30363d; border-radius:4px; padding:10px; min-height:40px;">
+                        <span style="color:#484f58; font-size:0.82rem;">Chargement…</span>
+                    </div>
+                </div>
+            </div>
+            <div style="display:flex; gap:8px;">
+                <button onclick="createBS()" style="background:#0ea5e9; border:none; color:#fff; padding:8px 16px; border-radius:4px; cursor:pointer;">Créer</button>
+                <button onclick="toggleAddBS()" style="background:#30363d; border:none; color:#8b949e; padding:8px 14px; border-radius:4px; cursor:pointer;">Annuler</button>
+            </div>
+        </div>
+        <?php endif; ?>
+
+        <div id="bs-list">
             <div style="text-align:center; color:#484f58; padding:20px;">Chargement…</div>
         </div>
     </div>
@@ -337,38 +376,105 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'MJ') {
     };
 
     // -------------------------------------------------------
-    // BIENS SUPPORTS (résumé)
+    // BIENS SUPPORTS (CRUD complet)
     // -------------------------------------------------------
+    var bsData = [];
+
     async function loadBS() {
         var res  = await fetch(API_BS);
         var json = await res.json();
-        var el   = document.getElementById('bs-summary');
+        bsData   = json.data || [];
 
-        if (json.status !== 'success' || json.data.length === 0) {
-            el.innerHTML = '<p style="color:#484f58; font-size:0.85rem;">Aucun Bien Support configuré.</p>';
+        renderVMCheckboxes(json.valeurs_metier || []);
+        renderBS(json);
+    }
+
+    function renderVMCheckboxes(vms) {
+        var el = document.getElementById('bs-vm-cbs');
+        if (!el) return;
+        if (vms.length === 0) {
+            el.innerHTML = '<span style="color:#484f58; font-size:0.82rem;">Créez d\'abord des Valeurs Métier.</span>';
+            return;
+        }
+        el.innerHTML = vms.map(function(vm) {
+            return '<label style="display:flex; align-items:center; gap:5px; color:#c9d1d9; font-size:0.82rem; cursor:pointer; background:#21262d; border:1px solid #30363d; padding:3px 9px; border-radius:4px;">' +
+                '<input type="checkbox" class="bs-vm-cb" value="' + vm.id + '" style="margin:0;">' +
+                '<span style="font-family:monospace; font-size:0.68rem; color:#3b82f6;">VM-' + String(vm.id).padStart(3,'0') + '</span>' +
+                esc(vm.nom) +
+            '</label>';
+        }).join('');
+    }
+
+    function renderBS(json) {
+        var el = document.getElementById('bs-list');
+        if (!json || json.status !== 'success' || json.data.length === 0) {
+            el.innerHTML = '<p style="color:#484f58; font-size:0.85rem; padding:10px 0;">Aucun Bien Support configuré.</p>';
             return;
         }
 
-        var vmMap = {};
-        (json.valeurs_metier || []).forEach(function(vm) { vmMap[vm.id] = vm.nom; });
+        var typeIcons = {
+            'Logiciel / Application':'💿','Infrastructure réseau':'🌐',
+            'Serveur / Cloud':'☁️','Poste de travail':'💻',
+            'Personne / Équipe':'👥','Site / Local':'🏢','Autre':'📦'
+        };
 
-        el.innerHTML = '<table class="bs-table">' +
-            '<thead><tr><th>Identifiant</th><th>Type</th><th>Nom</th><th>Valeurs Métier supportées</th></tr></thead>' +
-            '<tbody>' +
+        el.innerHTML = '<table class="bs-table"><thead><tr>' +
+            '<th>Identifiant</th><th>Type</th><th>Nom</th><th>VM associées</th>' +
+            (IS_ADMIN ? '<th class="no-print">Action</th>' : '') +
+            '</tr></thead><tbody>' +
             json.data.map(function(bs) {
-                var bsId   = 'BS-' + String(bs.id).padStart(3,'0');
+                var bsId     = 'BS-' + String(bs.id).padStart(3,'0');
+                var icon     = typeIcons[bs.type_bien] || '📦';
                 var vmBadges = (bs.vm_ids||[]).map(function(vid) {
-                    return '<span class="bs-badge" style="margin-right:4px;">VM-' + String(vid).padStart(3,'0') + '</span>';
-                }).join('') || '—';
-                return '<tr>' +
+                    return '<span style="font-family:monospace; font-size:0.68rem; background:rgba(59,130,246,0.1); color:#3b82f6; border:1px solid rgba(59,130,246,0.3); padding:1px 5px; border-radius:3px; margin-right:3px;">VM-' + String(vid).padStart(3,'0') + '</span>';
+                }).join('') || '<span style="color:#484f58;">—</span>';
+                var delBtn = IS_ADMIN ? '<td><button onclick="deleteBS(' + bs.id + ')" style="background:none; border:none; color:#484f58; cursor:pointer; font-size:0.85rem;" title="Supprimer">🗑️</button></td>' : '';
+                return '<tr style="border-bottom:1px solid #1c2128;">' +
                     '<td><span class="bs-badge">' + esc(bsId) + '</span></td>' +
-                    '<td>' + esc(bs.type_bien) + '</td>' +
-                    '<td style="font-weight:bold;">' + esc(bs.nom) + '</td>' +
+                    '<td style="color:#c9d1d9; font-size:0.82rem;">' + icon + ' ' + esc(bs.type_bien) + '</td>' +
+                    '<td style="font-weight:bold; color:#fff;">' + esc(bs.nom) +
+                        (bs.description ? '<br><span style="font-size:0.77rem; color:#8b949e; font-weight:normal;">' + esc(bs.description) + '</span>' : '') +
+                    '</td>' +
                     '<td>' + vmBadges + '</td>' +
+                    delBtn +
                 '</tr>';
             }).join('') +
             '</tbody></table>';
     }
+
+    window.toggleAddBS = function() {
+        var f = document.getElementById('form-add-bs');
+        if (f) f.style.display = f.style.display === 'none' ? 'block' : 'none';
+    };
+
+    window.createBS = async function() {
+        var nom = document.getElementById('bs-nom').value.trim();
+        if (!nom) { showMsg('Le nom est obligatoire.', false); return; }
+        var vm_ids = Array.from(document.querySelectorAll('.bs-vm-cb:checked')).map(function(cb) { return parseInt(cb.value); });
+        var payload = {
+            nom,
+            type_bien:   document.getElementById('bs-type').value,
+            description: document.getElementById('bs-desc').value.trim(),
+            vm_ids
+        };
+        var res  = await fetch(API_BS, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+        var json = await res.json();
+        showMsg(json.message, json.status === 'success');
+        if (json.status === 'success') {
+            document.getElementById('bs-nom').value  = '';
+            document.getElementById('bs-desc').value = '';
+            document.getElementById('form-add-bs').style.display = 'none';
+            loadBS();
+        }
+    };
+
+    window.deleteBS = async function(id) {
+        if (!confirm('Supprimer ce Bien Support ?')) return;
+        var res  = await fetch(API_BS, { method:'DELETE', headers:{'Content-Type':'application/json'}, body: JSON.stringify({id}) });
+        var json = await res.json();
+        showMsg(json.message, json.status === 'success');
+        if (json.status === 'success') loadBS();
+    };
 
     load();
 })();
