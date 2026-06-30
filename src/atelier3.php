@@ -43,22 +43,24 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'MJ') {
 .lvl-4 { background:rgba(218,41,28,0.20);   color:#ff4444; border:1px solid #ff444455; font-weight:900; }
 
 /* ── Matrice ──────────────────────────────────────────── */
-.matrix-wrap { display:flex; align-items:flex-start; gap:20px; flex-wrap:wrap; }
-.matrix-area { flex:0 0 auto; }
-.matrix-grid { display:grid; grid-template-columns:repeat(4,90px); grid-template-rows:repeat(4,70px); gap:2px; background:#30363d; border:2px solid #30363d; border-radius:4px; }
-.m-cell { display:flex; flex-direction:column; align-items:center; justify-content:center; padding:4px; gap:3px; flex-wrap:wrap; position:relative; }
-.m-bg-0 { background:#0d1117; }
-.m-bg-1 { background:rgba(100,116,139,0.18); }
-.m-bg-2 { background:rgba(59,130,246,0.18);  }
-.m-bg-3 { background:rgba(245,158,11,0.18);  }
-.m-bg-4 { background:rgba(218,41,28,0.22);   }
-.m-pp-dot { font-size:0.65rem; padding:2px 5px; border-radius:4px; font-weight:bold; cursor:default; }
+.matrix-section { display:flex; flex-direction:column; align-items:center; }
+.matrix-top     { display:flex; align-items:flex-start; gap:32px; justify-content:center; }
+.matrix-legend  { display:flex; flex-direction:column; justify-content:center; min-width:200px; padding-top:8px; }
+.matrix-area    { flex:0 0 auto; }
+.matrix-grid    { display:grid; grid-template-columns:repeat(4,130px); grid-template-rows:repeat(4,100px); gap:2px; background:#30363d; border:2px solid #30363d; border-radius:4px; }
+.m-cell  { display:flex; flex-direction:column; align-items:center; justify-content:center; padding:6px; gap:4px; flex-wrap:wrap; position:relative; }
+.m-bg-0  { background:#0d1117; }
+.m-bg-1  { background:rgba(100,116,139,0.18); }
+.m-bg-2  { background:rgba(59,130,246,0.18);  }
+.m-bg-3  { background:rgba(245,158,11,0.18);  }
+.m-bg-4  { background:rgba(218,41,28,0.22);   }
+.m-pp-dot { font-size:0.72rem; padding:3px 7px; border-radius:4px; font-weight:bold; cursor:default; }
 
-.matrix-y { display:flex; flex-direction:column; justify-content:space-between; height:286px; padding:0 8px 0 0; text-align:right; color:#8b949e; font-size:0.72rem; align-items:flex-end; }
-.matrix-x { display:grid; grid-template-columns:repeat(4,90px); text-align:center; color:#8b949e; font-size:0.72rem; padding-top:6px; gap:2px; }
-.matrix-legend { flex:1; min-width:220px; }
-.ml-item { display:flex; align-items:center; gap:10px; margin-bottom:10px; font-size:0.82rem; color:#c9d1d9; }
-.ml-dot  { width:32px; height:16px; border-radius:4px; flex-shrink:0; }
+.matrix-y { display:flex; flex-direction:column; justify-content:space-between; height:406px; padding:0 10px 0 0; text-align:right; color:#8b949e; font-size:0.78rem; align-items:flex-end; }
+.matrix-x { display:grid; grid-template-columns:repeat(4,130px); text-align:center; color:#8b949e; font-size:0.78rem; padding-top:8px; gap:2px; }
+.ml-item  { display:flex; align-items:center; gap:10px; margin-bottom:12px; font-size:0.85rem; color:#c9d1d9; }
+.ml-dot   { width:36px; height:18px; border-radius:4px; flex-shrink:0; }
+.matrix-bottom { display:flex; gap:24px; justify-content:center; flex-wrap:wrap; margin-top:28px; padding-top:20px; border-top:1px solid #21262d; width:100%; }
 
 /* ── Scénarios Stratégiques ───────────────────────────── */
 .ss-card  { background:#0d1117; border:1px solid #30363d; border-radius:6px; padding:14px 16px; margin-bottom:10px; display:flex; align-items:flex-start; gap:12px; }
@@ -198,39 +200,44 @@ label.a3 { display:block; font-size:0.75rem; color:#8b949e; margin-bottom:4px; }
          TAB 2 : Matrice Exposition
     ════════════════════════════════════════════════════════════════ -->
     <div class="a3-pane" id="pane-matrix">
-        <p style="color:#8b949e; font-size:0.85rem; margin:0 0 20px 0;">
-            Chaque PP est positionnée dans la matrice Dépendance × Pénétration.<br>
-            La couleur du badge = niveau de menace calculé (Dépendance, Pénétration, Maturité, Confiance).
-        </p>
-        <div class="matrix-wrap">
-            <div class="matrix-area">
-                <div style="display:flex; align-items:center; margin-bottom:4px;">
-                    <div style="writing-mode:vertical-rl; transform:rotate(180deg); color:#8b949e; font-size:0.75rem; font-weight:bold; margin-right:6px; height:286px; display:flex; align-items:center;">Dépendance ↑</div>
-                    <div>
-                        <div class="matrix-y" id="matrix-y-labels">
+        <div class="matrix-section">
+            <!-- Légende (gauche) + Matrice (droite) -->
+            <div class="matrix-top">
+                <div class="matrix-legend">
+                    <h4 style="color:#c9d1d9; margin:0 0 16px 0; font-size:0.95rem;">Niveau de menace</h4>
+                    <div class="ml-item"><div class="ml-dot lvl-4"></div>4 — Critique</div>
+                    <div class="ml-item"><div class="ml-dot lvl-3"></div>3 — Important</div>
+                    <div class="ml-item"><div class="ml-dot lvl-2"></div>2 — Limité</div>
+                    <div class="ml-item"><div class="ml-dot lvl-1"></div>1 — Négligeable</div>
+                    <div style="margin-top:20px; color:#484f58; font-size:0.78rem; line-height:1.7; max-width:200px;">
+                        La cellule indique le niveau d'exposition brut (Dépendance × Pénétration).<br>
+                        La couleur du badge tient compte de la fiabilité de la PP.
+                    </div>
+                </div>
+
+                <div class="matrix-area">
+                    <div style="display:flex; align-items:center;">
+                        <div style="writing-mode:vertical-rl; transform:rotate(180deg); color:#8b949e; font-size:0.8rem; font-weight:bold; margin-right:8px; height:406px; display:flex; align-items:center; white-space:nowrap;">Dépendance ↑</div>
+                        <div class="matrix-y">
                             <div>4 Critique</div><div>3 Forte</div><div>2 Moyenne</div><div>1 Faible</div>
                         </div>
-                    </div>
-                    <div>
-                        <div class="matrix-grid" id="matrix-grid"></div>
-                        <div class="matrix-x">
-                            <div>1<br>Très limitée</div><div>2<br>Partielle</div><div>3<br>Significative</div><div>4<br>Totale</div>
+                        <div>
+                            <div class="matrix-grid" id="matrix-grid"></div>
+                            <div class="matrix-x">
+                                <div>1<br>Très limitée</div><div>2<br>Partielle</div><div>3<br>Significative</div><div>4<br>Totale</div>
+                            </div>
+                            <div style="text-align:center; color:#8b949e; font-size:0.8rem; font-weight:bold; margin-top:6px;">Pénétration →</div>
                         </div>
-                        <div style="text-align:center; color:#8b949e; font-size:0.75rem; font-weight:bold; margin-top:4px;">Pénétration →</div>
                     </div>
                 </div>
             </div>
-            <div class="matrix-legend">
-                <h4 style="color:#c9d1d9; margin:0 0 14px 0;">Niveau de menace</h4>
-                <div class="ml-item"><div class="ml-dot lvl-4"></div>4 — Critique</div>
-                <div class="ml-item"><div class="ml-dot lvl-3"></div>3 — Important</div>
-                <div class="ml-item"><div class="ml-dot lvl-2"></div>2 — Limité</div>
-                <div class="ml-item"><div class="ml-dot lvl-1"></div>1 — Négligeable</div>
-                <div style="margin-top:20px; color:#484f58; font-size:0.78rem; line-height:1.6;">
-                    La cellule indique le niveau d'exposition brut (Dépendance × Pénétration).<br>
-                    La couleur du badge tient compte de la fiabilité de la PP.
+
+            <!-- PP dans cette analyse (dessous) -->
+            <div class="matrix-bottom">
+                <div>
+                    <div style="color:#8b949e; font-size:0.78rem; font-weight:bold; margin-bottom:10px; text-transform:uppercase; letter-spacing:0.05em;">PP dans cette analyse</div>
+                    <div id="matrix-legend-pps" style="display:flex; flex-wrap:wrap; gap:8px;"></div>
                 </div>
-                <div id="matrix-legend-pps" style="margin-top:16px;"></div>
             </div>
         </div>
     </div>
@@ -472,9 +479,12 @@ label.a3 { display:block; font-size:0.75rem; color:#8b949e; margin-bottom:4px; }
                 cells[''+d+'_'+p] = cell;
             }
         }
-        // Placer les PP
+        // Placer les PP + liste en bas
         var legend = document.getElementById('matrix-legend-pps');
-        legend.innerHTML = '<div style="color:#8b949e; font-size:0.75rem; margin-bottom:8px; font-weight:bold;">PP dans cette analyse :</div>';
+        legend.innerHTML = '';
+        if (allPPs.length === 0) {
+            legend.innerHTML = '<span style="color:#484f58;font-size:0.82rem;">Aucune PP créée.</span>';
+        }
         allPPs.forEach(function(pp) {
             var c     = computePP(pp);
             var ppId  = 'PP-' + String(pp.id).padStart(3,'0');
@@ -482,16 +492,16 @@ label.a3 { display:block; font-size:0.75rem; color:#8b949e; margin-bottom:4px; }
             if (cell) {
                 var dot = document.createElement('span');
                 dot.className = 'm-pp-dot lvl-badge lvl-' + c.menace;
-                dot.title = ppId + ' — ' + pp.nom + '\nExposition: ' + EXP_LABELS[c.expo] + ' | Fiabilité: ' + FIA_LABELS[c.fiab] + ' | Menace: ' + MEN_LABELS[c.menace];
+                dot.title = ppId + ' — ' + pp.nom + '\nExposition : ' + EXP_LABELS[c.expo] + ' | Fiabilité : ' + FIA_LABELS[c.fiab] + ' | Menace : ' + MEN_LABELS[c.menace];
                 dot.textContent = ppId.replace('PP-','PP');
                 cell.appendChild(dot);
             }
-            legend.innerHTML += '<div style="display:flex;align-items:center;gap:6px;margin-bottom:5px;">' +
-                '<span class="lvl-badge lvl-' + c.menace + '" style="min-width:60px; text-align:center; font-size:0.68rem;">' + ppId + '</span>' +
-                '<span style="color:#c9d1d9; font-size:0.78rem;">' + esc(pp.nom) + '</span>' +
+            legend.innerHTML += '<div style="display:flex;align-items:center;gap:7px;background:#0d1117;border:1px solid #21262d;border-radius:6px;padding:5px 10px;">' +
+                '<span class="lvl-badge lvl-' + c.menace + '" style="min-width:56px; text-align:center; font-size:0.7rem;">' + ppId + '</span>' +
+                '<span style="color:#c9d1d9; font-size:0.82rem;">' + esc(pp.nom) + '</span>' +
+                '<span style="color:#484f58; font-size:0.72rem; margin-left:4px;">menace ' + MEN_LABELS[c.menace] + '</span>' +
             '</div>';
         });
-        if (allPPs.length === 0) legend.innerHTML += '<div style="color:#484f58;font-size:0.8rem;">Aucune PP créée.</div>';
     }
 
     // ── SCÉNARIOS STRATÉGIQUES ───────────────────────────────────
