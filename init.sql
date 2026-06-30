@@ -119,6 +119,20 @@ CREATE TABLE objectifs_vises (
     FOREIGN KEY (menace_id)  REFERENCES menaces(id)   ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+CREATE TABLE parties_prenantes (
+    id             INT AUTO_INCREMENT PRIMARY KEY,
+    analyse_id     INT NOT NULL,
+    nom            VARCHAR(200) NOT NULL,
+    type_pp        ENUM('Interne','Externe','Partenaire','Fournisseur','Client','Prestataire','Autre') NOT NULL DEFAULT 'Externe',
+    description    VARCHAR(255) NULL,
+    dependance     TINYINT NOT NULL DEFAULT 1 COMMENT '1=Faible 2=Moyenne 3=Forte 4=Critique',
+    penetration    TINYINT NOT NULL DEFAULT 1 COMMENT '1=Très limitée 2=Partielle 3=Significative 4=Totale',
+    maturite_cyber TINYINT NOT NULL DEFAULT 1 COMMENT '1=Faible 2=Limitée 3=Correcte 4=Avancée',
+    confiance      TINYINT NOT NULL DEFAULT 1 COMMENT '1=Inconnue 2=Limitée 3=Établie 4=Forte',
+    created_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (analyse_id) REFERENCES analyses(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- ============================================================
 -- 4. SCÉNARIOS DE RISQUES
 -- ============================================================
@@ -145,7 +159,28 @@ CREATE TABLE scenarios_bruts (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================================
--- 5. ÉVÉNEMENTS REDOUTÉS (ATELIER 1)
+-- 5. SCÉNARIOS STRATÉGIQUES (ATELIER 3 : SR × PP → OV)
+-- ============================================================
+
+CREATE TABLE scenarios_strategiques (
+    id            INT AUTO_INCREMENT PRIMARY KEY,
+    analyse_id    INT NOT NULL,
+    menace_id     INT NOT NULL,
+    pp_id         INT NOT NULL,
+    ov_id         INT NULL,
+    description   TEXT NULL,
+    gravite       TINYINT NOT NULL DEFAULT 0,
+    vraisemblance TINYINT NOT NULL DEFAULT 0,
+    statut        ENUM('a_evaluer','retenu','non_retenu') NOT NULL DEFAULT 'a_evaluer',
+    created_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (analyse_id) REFERENCES analyses(id)           ON DELETE CASCADE,
+    FOREIGN KEY (menace_id)  REFERENCES menaces(id)            ON DELETE CASCADE,
+    FOREIGN KEY (pp_id)      REFERENCES parties_prenantes(id)  ON DELETE CASCADE,
+    FOREIGN KEY (ov_id)      REFERENCES objectifs_vises(id)    ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ============================================================
+-- 6. ÉVÉNEMENTS REDOUTÉS (ATELIER 1)
 -- ============================================================
 
 CREATE TABLE evenements_redoutes (
@@ -178,7 +213,7 @@ CREATE TABLE actions_traitement (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================================
--- 6. DONNÉES DE DÉMONSTRATION
+-- 8. DONNÉES DE DÉMONSTRATION
 -- ============================================================
 
 INSERT INTO entites (nom, secteur, description) VALUES
@@ -210,6 +245,14 @@ INSERT INTO menaces (analyse_id, type_source, motivation, motivation_note, resso
 (1, 'Employé malveillant',           'Vengeance / Sabotage interne',     2, 1, NULL),
 (1, 'Concurrent déloyal',            'Espionnage industriel',             2, 3, 1),
 (1, 'Hacktiviste',                   'Idéologie / Dégradation d''image', 3, 1, NULL);
+
+-- Parties Prenantes de démonstration (analyse 1)
+INSERT INTO parties_prenantes (analyse_id, nom, type_pp, description, dependance, penetration, maturite_cyber, confiance) VALUES
+(1, 'Prestataire infogérance (DSI externalisée)', 'Prestataire', 'Accès complet aux serveurs et AD',         4, 4, 2, 2),
+(1, 'Éditeur ERP (support VPN)',                  'Fournisseur', 'Accès VPN pour maintenance applicative',    3, 3, 2, 3),
+(1, 'Fournisseur Cloud (hébergement)',             'Fournisseur', 'Hébergement IaaS, données en transit',      3, 2, 3, 3),
+(1, 'Experts-comptables (cabinet externe)',        'Partenaire',  'Accès en lecture aux données financières',  2, 2, 1, 2),
+(1, 'Collaborateurs internes (RH / Finance)',      'Interne',     'Accès privilégié aux systèmes métier',      4, 3, 2, 3);
 
 -- Événements Redoutés (exemples liés aux VM ci-dessus : VM id 1-4, analyse 1)
 INSERT INTO evenements_redoutes (analyse_id, valeur_metier_id, categorie, description, impact, notes) VALUES

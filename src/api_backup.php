@@ -14,15 +14,15 @@ const EXPORT_TABLES = [
     'entites', 'analyses',
     'equipes', 'valeurs_metier', 'menaces',
     'biens_supports', 'valeur_bien_support', 'objectifs_vises',
-    'evenements_redoutes',
-    'scenarios_bruts', 'actions_traitement',
+    'parties_prenantes', 'evenements_redoutes',
+    'scenarios_strategiques', 'scenarios_bruts', 'actions_traitement',
     'audit_logs'
 ];
 
 // Ordre de suppression lors de l'import (plus dépendant en premier)
 const DELETE_ORDER = [
-    'audit_logs', 'actions_traitement', 'scenarios_bruts',
-    'evenements_redoutes',
+    'audit_logs', 'actions_traitement', 'scenarios_bruts', 'scenarios_strategiques',
+    'evenements_redoutes', 'parties_prenantes',
     'objectifs_vises', 'valeur_bien_support', 'biens_supports',
     'menaces', 'valeurs_metier', 'equipes',
     'analyses', 'entites'
