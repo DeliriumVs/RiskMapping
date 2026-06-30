@@ -120,6 +120,10 @@ $bs = $badge_statut_map[$analyse_statut] ?? ['label'=>$analyse_statut,'color'=>'
                 <button class="nav-btn-view" data-target="admin_objectifs_vises.php">🎯 Objectifs Visés</button>
             </div>
             <div class="nav-group">
+                <span class="nav-title">Ateliers</span>
+                <button class="nav-btn-view" data-target="atelier1.php">📋 Atelier 1</button>
+            </div>
+            <div class="nav-group">
                 <span class="nav-title">Organisation</span>
                 <button class="nav-btn-view" data-target="admin_equipes.php">🏢 Équipes</button>
             </div>

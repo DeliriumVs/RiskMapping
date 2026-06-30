@@ -143,7 +143,24 @@ CREATE TABLE scenarios_bruts (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================================
--- 5. PLAN D'ACTIONS DE TRAITEMENT (PAC)
+-- 5. ÉVÉNEMENTS REDOUTÉS (ATELIER 1)
+-- ============================================================
+
+CREATE TABLE evenements_redoutes (
+    id               INT AUTO_INCREMENT PRIMARY KEY,
+    analyse_id       INT NOT NULL,
+    valeur_metier_id INT NOT NULL,
+    categorie        ENUM('Financier','Opérationnel','Juridique','Image','Santé') NOT NULL,
+    description      VARCHAR(255) NOT NULL,
+    impact           ENUM('Mineur','Significatif','Majeur','Critique') NOT NULL DEFAULT 'Mineur',
+    notes            TEXT NULL,
+    created_at       TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (analyse_id)       REFERENCES analyses(id)       ON DELETE CASCADE,
+    FOREIGN KEY (valeur_metier_id) REFERENCES valeurs_metier(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ============================================================
+-- 6. PLAN D'ACTIONS DE TRAITEMENT (PAC)
 -- ============================================================
 
 CREATE TABLE actions_traitement (
@@ -191,3 +208,13 @@ INSERT INTO menaces (analyse_id, type_source, motivation, niveau_capacite) VALUE
 (1, 'Employé malveillant',           'Vengeance / Sabotage',             'Standard'),
 (1, 'Concurrent déloyal',            'Espionnage industriel',            'Élevée'),
 (1, 'Hacktiviste',                   'Idéologie / Dégradation d''image', 'Modérée');
+
+-- Événements Redoutés (exemples liés aux VM ci-dessus : VM id 1-4, analyse 1)
+INSERT INTO evenements_redoutes (analyse_id, valeur_metier_id, categorie, description, impact, notes) VALUES
+(1, 1, 'Financier',     'Interruption du processus de facturation (>48h)',  'Critique',     'Perte de CA directe, pénalités contractuelles'),
+(1, 1, 'Opérationnel',  'Erreurs massives dans les montants facturés',       'Majeur',       'Risque de litige client'),
+(1, 2, 'Juridique',     'Divulgation non autorisée de données clients (RGPD)','Critique',    'Amendes CNIL, perte de confiance'),
+(1, 2, 'Image',         'Publication de la base clients sur un forum',        'Majeur',      'Impact médiatique potentiel'),
+(1, 3, 'Image',         'Défacement du site web ou campagne de dénigrement',  'Significatif','Atteinte à la réputation'),
+(1, 4, 'Financier',     'Vol du code source par un concurrent',               'Critique',    'Perte d''avantage concurrentiel'),
+(1, 4, 'Opérationnel',  'Destruction irréversible des dépôts de code',        'Majeur',      '');

@@ -111,8 +111,8 @@ try {
 
         $titre          = trim($input['titre'] ?? '');
         $description    = trim($input['description'] ?? '');
-        $impact         = max(1, min(4, (int)($input['impact_estime'] ?? 1)));
-        $vrai           = max(1, min(4, (int)($input['vraisemblance_estimee'] ?? 1)));
+        $impact         = max(0, min(4, (int)($input['impact_estime'] ?? 0)));
+        $vrai           = max(0, min(4, (int)($input['vraisemblance_estimee'] ?? 0)));
         $strategie      = trim($input['strategie_traitement'] ?? 'À définir');
         $just_trait     = trim($input['justification_traitement'] ?? '');
         $just_imp       = trim($input['justification_impact'] ?? '');
@@ -120,7 +120,7 @@ try {
         $titre_tech     = trim($input['titre_technique'] ?? '');
         $scenario_tech  = trim($input['scenario_technique'] ?? '');
 
-        $niveau = $HEATMAP["$impact,$vrai"] ?? 1;
+        $niveau = ($impact > 0 && $vrai > 0) ? ($HEATMAP["$impact,$vrai"] ?? 1) : 0;
 
         $pdo->prepare("
             UPDATE scenarios_bruts SET

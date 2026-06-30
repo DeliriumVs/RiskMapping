@@ -191,9 +191,10 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'MJ') { die("Accès refus
 
 <script>
     var apiRegistre = 'api_registre.php';
-    var apiActions = 'api_actions.php'; 
+    var apiActions = 'api_actions.php';
     var sortableInstance = null;
-    var allExpanded = false; // État pour le bouton "Tout déplier"
+    var allExpanded = false;
+    var allScenarios = {};
 
     function showMsgReg(text, isError = false) {
         const box = document.getElementById('api-message-registre');
@@ -278,6 +279,7 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'MJ') { die("Accès refus
             thead.innerHTML = thHtml;
             
             tbody.innerHTML = '';
+            allScenarios = {};
             initHeatmapGrid();
 
             if (json.data.length === 0) {
@@ -289,6 +291,7 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'MJ') { die("Accès refus
             document.getElementById('heatmap-container').style.display = 'flex';
 
             json.data.forEach(s => {
+                allScenarios[s.id] = s;
                 const imp = Math.min(Math.max(parseInt(s.impact_estime), 1), 4);
                 const vrai = Math.min(Math.max(parseInt(s.vraisemblance_estimee), 1), 4);
                 
@@ -329,9 +332,9 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'MJ') { die("Accès refus
                 `;
                 
                 if (json.user_role !== 'lecteur') {
-                    let btnHtml = `<a href="edit_scenario.php?id=${s.id}&from=master" class="btn" style="padding: 6px; font-size: 0.8rem; background: #484f58; color: #ffffff; border: 1px solid #c9d1d9; display: block; margin-bottom: 8px; text-decoration:none; text-align:center; font-weight:bold; border-radius:4px;">✎ Éditer</a>`;
+                    let btnHtml = `<button onclick="openEditModal(${s.id})" class="btn" style="padding: 6px; font-size: 0.8rem; background: #484f58; color: #ffffff; border: 1px solid #c9d1d9; display: block; margin-bottom: 8px; cursor:pointer; border-radius:4px; width:100%; text-align:center;">✎ Éditer</button>`;
                     if (json.user_role === 'admin') {
-                        btnHtml += `<button onclick="deleteScenario(${s.id})" class="btn" style="padding: 6px; font-size: 0.8rem; background: rgba(255,0,0,0.2); color: #ff4444; border: 1px solid #ff4444; display: block; cursor:pointer; border-radius:4px;">🗑️ Suppr.</button>`;
+                        btnHtml += `<button onclick="deleteScenario(${s.id})" class="btn" style="padding: 6px; font-size: 0.8rem; background: rgba(255,0,0,0.2); color: #ff4444; border: 1px solid #ff4444; display: block; cursor:pointer; border-radius:4px; width:100%;">🗑️ Suppr.</button>`;
                     }
                     html += `<td class="no-print" style="vertical-align: middle;">${btnHtml}</td>`;
                 }
@@ -619,6 +622,145 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'MJ') { die("Accès refus
                 document.getElementById('new-desc').value  = '';
                 document.getElementById('new-impact').value = '0';
                 document.getElementById('new-vrai').value   = '0';
+                showMsgReg(json.message);
+                loadRegistre();
+            } else {
+                showMsgReg(json.message, true);
+            }
+        } catch(e) { showMsgReg("Erreur réseau.", true); }
+    }
+
+    // -------------------------------------------------------
+    // MODAL ÉDITION SCÉNARIO
+    // -------------------------------------------------------
+    function openEditModal(id) {
+        const s = allScenarios[id];
+        if (!s) { showMsgReg("Scénario introuvable.", true); return; }
+
+        let modal = document.getElementById('edit-scenario-modal');
+        if (!modal) {
+            modal = document.createElement('div');
+            modal.id = 'edit-scenario-modal';
+            modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;';
+            modal.innerHTML = `
+                <div style="background:#161b22;border:1px solid #30363d;border-radius:10px;padding:28px;width:100%;max-width:740px;max-height:90vh;overflow-y:auto;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+                        <h3 style="margin:0;color:#3b82f6;">✎ Modifier le scénario</h3>
+                        <button onclick="closeEditModal()" style="background:none;border:none;color:#8b949e;font-size:1.4rem;cursor:pointer;line-height:1;">✕</button>
+                    </div>
+                    <input type="hidden" id="edit-id">
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">
+                        <div style="grid-column:1/-1;">
+                            <label style="display:block;font-size:0.8rem;color:#8b949e;margin-bottom:4px;">Titre *</label>
+                            <input id="edit-titre" type="text" style="width:100%;box-sizing:border-box;background:#0d1117;border:1px solid #30363d;color:#fff;padding:9px;border-radius:4px;">
+                        </div>
+                        <div>
+                            <label style="display:block;font-size:0.8rem;color:#8b949e;margin-bottom:4px;">Gravité</label>
+                            <select id="edit-impact" style="width:100%;background:#0d1117;border:1px solid #30363d;color:#c9d1d9;padding:9px;border-radius:4px;">
+                                <option value="0">— Non défini —</option>
+                                <option value="1">1 — Critique</option>
+                                <option value="2">2 — Grave</option>
+                                <option value="3">3 — Significative</option>
+                                <option value="4">4 — Mineure</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label style="display:block;font-size:0.8rem;color:#8b949e;margin-bottom:4px;">Vraisemblance</label>
+                            <select id="edit-vrai" style="width:100%;background:#0d1117;border:1px solid #30363d;color:#c9d1d9;padding:9px;border-radius:4px;">
+                                <option value="0">— Non défini —</option>
+                                <option value="1">1 — Très faible</option>
+                                <option value="2">2 — Faible</option>
+                                <option value="3">3 — Élevée</option>
+                                <option value="4">4 — Très élevée</option>
+                            </select>
+                        </div>
+                        <div style="grid-column:1/-1;">
+                            <label style="display:block;font-size:0.8rem;color:#8b949e;margin-bottom:4px;">Description</label>
+                            <textarea id="edit-desc" rows="3" style="width:100%;box-sizing:border-box;background:#0d1117;border:1px solid #30363d;color:#fff;padding:9px;border-radius:4px;resize:vertical;"></textarea>
+                        </div>
+                        <div>
+                            <label style="display:block;font-size:0.8rem;color:#8b949e;margin-bottom:4px;">Stratégie de traitement</label>
+                            <select id="edit-strategie" style="width:100%;background:#0d1117;border:1px solid #30363d;color:#c9d1d9;padding:9px;border-radius:4px;">
+                                <option value="À définir">À définir</option>
+                                <option value="Réduire">Réduire</option>
+                                <option value="Transférer">Transférer</option>
+                                <option value="Éviter">Éviter</option>
+                                <option value="Accepter">Accepter</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label style="display:block;font-size:0.8rem;color:#8b949e;margin-bottom:4px;">Justification traitement</label>
+                            <input id="edit-justif-trait" type="text" style="width:100%;box-sizing:border-box;background:#0d1117;border:1px solid #30363d;color:#fff;padding:9px;border-radius:4px;">
+                        </div>
+                        <div>
+                            <label style="display:block;font-size:0.8rem;color:#8b949e;margin-bottom:4px;">Justification gravité</label>
+                            <input id="edit-justif-imp" type="text" style="width:100%;box-sizing:border-box;background:#0d1117;border:1px solid #30363d;color:#fff;padding:9px;border-radius:4px;">
+                        </div>
+                        <div>
+                            <label style="display:block;font-size:0.8rem;color:#8b949e;margin-bottom:4px;">Justification vraisemblance</label>
+                            <input id="edit-justif-vrai" type="text" style="width:100%;box-sizing:border-box;background:#0d1117;border:1px solid #30363d;color:#fff;padding:9px;border-radius:4px;">
+                        </div>
+                        <div style="grid-column:1/-1;border-top:1px solid #30363d;padding-top:14px;margin-top:4px;">
+                            <label style="display:block;font-size:0.8rem;color:#a78bfa;margin-bottom:4px;">Reformulation technique (titre)</label>
+                            <input id="edit-titre-tech" type="text" placeholder="Titre technique pour l'équipe sécu" style="width:100%;box-sizing:border-box;background:#0d1117;border:1px solid rgba(167,139,250,0.3);color:#c9d1d9;padding:9px;border-radius:4px;">
+                        </div>
+                        <div style="grid-column:1/-1;">
+                            <label style="display:block;font-size:0.8rem;color:#a78bfa;margin-bottom:4px;">Scénario technique (détail)</label>
+                            <textarea id="edit-scenario-tech" rows="4" style="width:100%;box-sizing:border-box;background:#0d1117;border:1px solid rgba(167,139,250,0.3);color:#c9d1d9;padding:9px;border-radius:4px;resize:vertical;"></textarea>
+                        </div>
+                    </div>
+                    <div style="display:flex;gap:10px;justify-content:flex-end;">
+                        <button onclick="closeEditModal()" style="background:#30363d;border:none;color:#8b949e;padding:9px 18px;border-radius:4px;cursor:pointer;">Annuler</button>
+                        <button onclick="saveEditModal()" style="background:#3b82f6;border:none;color:#fff;padding:9px 22px;border-radius:4px;cursor:pointer;font-weight:bold;">💾 Enregistrer</button>
+                    </div>
+                </div>`;
+            document.body.appendChild(modal);
+            modal.addEventListener('click', function(e) { if (e.target === modal) closeEditModal(); });
+        }
+
+        document.getElementById('edit-id').value              = s.id;
+        document.getElementById('edit-titre').value           = s.titre || '';
+        document.getElementById('edit-desc').value            = s.description || '';
+        document.getElementById('edit-impact').value          = s.impact_estime || 0;
+        document.getElementById('edit-vrai').value            = s.vraisemblance_estimee || 0;
+        document.getElementById('edit-strategie').value       = s.strategie_traitement || 'À définir';
+        document.getElementById('edit-justif-trait').value    = s.justification_traitement || '';
+        document.getElementById('edit-justif-imp').value      = s.justification_impact || '';
+        document.getElementById('edit-justif-vrai').value     = s.justification_vraisemblance || '';
+        document.getElementById('edit-titre-tech').value      = s.titre_technique || '';
+        document.getElementById('edit-scenario-tech').value   = s.scenario_technique || '';
+        modal.style.display = 'flex';
+    }
+
+    function closeEditModal() {
+        const modal = document.getElementById('edit-scenario-modal');
+        if (modal) modal.style.display = 'none';
+    }
+
+    async function saveEditModal() {
+        const id     = parseInt(document.getElementById('edit-id').value);
+        const titre  = document.getElementById('edit-titre').value.trim();
+        if (!titre) { showMsgReg("Le titre est obligatoire.", true); return; }
+
+        const payload = {
+            id,
+            titre,
+            description:                document.getElementById('edit-desc').value.trim(),
+            impact_estime:              parseInt(document.getElementById('edit-impact').value) || 0,
+            vraisemblance_estimee:      parseInt(document.getElementById('edit-vrai').value) || 0,
+            strategie_traitement:       document.getElementById('edit-strategie').value,
+            justification_traitement:   document.getElementById('edit-justif-trait').value.trim(),
+            justification_impact:       document.getElementById('edit-justif-imp').value.trim(),
+            justification_vraisemblance:document.getElementById('edit-justif-vrai').value.trim(),
+            titre_technique:            document.getElementById('edit-titre-tech').value.trim(),
+            scenario_technique:         document.getElementById('edit-scenario-tech').value.trim()
+        };
+
+        try {
+            const res  = await fetch(apiRegistre, {method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload)});
+            const json = await res.json();
+            if (json.status === 'success') {
+                closeEditModal();
                 showMsgReg(json.message);
                 loadRegistre();
             } else {
