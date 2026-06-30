@@ -35,12 +35,12 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'MJ') {
 .crit-sel { background:#0d1117; border:1px solid #30363d; color:#c9d1d9; padding:3px 4px; border-radius:4px; font-size:0.78rem; width:100%; cursor:pointer; }
 .crit-sel:hover { border-color:#8b949e; }
 
-/* Badge niveau calculé */
+/* Badge niveau calculé — progression vert → jaune → orange → rouge */
 .lvl-badge { font-size:0.72rem; padding:3px 9px; border-radius:10px; font-weight:bold; white-space:nowrap; display:inline-block; }
-.lvl-1 { background:rgba(100,116,139,0.15); color:#94a3b8; border:1px solid #94a3b855; }
-.lvl-2 { background:rgba(59,130,246,0.15);  color:#60a5fa; border:1px solid #60a5fa55; }
-.lvl-3 { background:rgba(245,158,11,0.15);  color:#f59e0b; border:1px solid #f59e0b55; }
-.lvl-4 { background:rgba(218,41,28,0.20);   color:#ff4444; border:1px solid #ff444455; font-weight:900; }
+.lvl-1 { background:rgba(34,197,94,0.14);  color:#4ade80; border:1px solid rgba(34,197,94,0.4);  }
+.lvl-2 { background:rgba(234,179,8,0.15);  color:#facc15; border:1px solid rgba(234,179,8,0.45); }
+.lvl-3 { background:rgba(245,158,11,0.15); color:#f59e0b; border:1px solid rgba(245,158,11,0.5); }
+.lvl-4 { background:rgba(218,41,28,0.20);  color:#ff4444; border:1px solid rgba(218,41,28,0.55); font-weight:900; }
 
 /* ── Matrice ──────────────────────────────────────────── */
 .matrix-section { display:flex; flex-direction:column; align-items:center; }
@@ -50,8 +50,8 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'MJ') {
 .matrix-grid    { display:grid; grid-template-columns:repeat(4,130px); grid-template-rows:repeat(4,100px); gap:2px; background:#30363d; border:2px solid #30363d; border-radius:4px; }
 .m-cell  { display:flex; flex-direction:column; align-items:center; justify-content:center; padding:6px; gap:4px; flex-wrap:wrap; position:relative; }
 .m-bg-0  { background:#0d1117; }
-.m-bg-1  { background:rgba(100,116,139,0.18); }
-.m-bg-2  { background:rgba(59,130,246,0.18);  }
+.m-bg-1  { background:rgba(34,197,94,0.10);   }
+.m-bg-2  { background:rgba(234,179,8,0.12);   }
 .m-bg-3  { background:rgba(245,158,11,0.18);  }
 .m-bg-4  { background:rgba(218,41,28,0.22);   }
 .m-pp-dot { font-size:0.72rem; padding:3px 7px; border-radius:4px; font-weight:bold; cursor:default; }
@@ -217,7 +217,10 @@ label.a3 { display:block; font-size:0.75rem; color:#8b949e; margin-bottom:4px; }
 
                 <div class="matrix-area">
                     <div style="display:flex; align-items:center;">
-                        <div style="writing-mode:vertical-rl; transform:rotate(180deg); color:#8b949e; font-size:0.8rem; font-weight:bold; margin-right:8px; height:406px; display:flex; align-items:center; white-space:nowrap;">Dépendance ↑</div>
+                        <div style="height:406px; display:flex; flex-direction:column; align-items:center; justify-content:center; margin-right:10px; flex-shrink:0; gap:6px;">
+                            <span style="color:#8b949e; font-size:1rem; line-height:1;">↑</span>
+                            <span style="writing-mode:vertical-rl; transform:rotate(180deg); color:#8b949e; font-size:0.8rem; font-weight:bold; white-space:nowrap; letter-spacing:0.04em;">Dépendance</span>
+                        </div>
                         <div class="matrix-y">
                             <div>4 Critique</div><div>3 Forte</div><div>2 Moyenne</div><div>1 Faible</div>
                         </div>
