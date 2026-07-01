@@ -2,6 +2,7 @@
 -- Schéma complet : multi-entité / multi-analyse
 
 SET NAMES utf8mb4;
+USE riskmapping_db;
 
 -- ============================================================
 -- 1. UTILISATEURS, RÔLES ET AUDIT
