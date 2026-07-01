@@ -18,7 +18,7 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'MJ' || ($_SESSION['admin
                 <th style="padding: 10px;">Email / Identifiant</th>
                 <th style="padding: 10px;">Rôle système</th>
                 <th style="padding: 10px;">Date d'inscription</th>
-                <th style="padding: 10px; text-align: right;">Action</th>
+                <th style="padding: 10px;">Action</th>
             </tr>
         </thead>
         <tbody id="table-body-comptes">
@@ -147,7 +147,7 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'MJ' || ($_SESSION['admin
                     <td style="padding: 10px; color: #fff; font-weight: bold;">${nameHtml}</td>
                     <td style="padding: 10px;">${roleHtml}</td>
                     <td style="padding: 10px; color: #8b949e; font-size: 0.9rem;">${dateCreated}</td>
-                    <td style="padding: 10px; text-align: right;">${actionHtml}</td>
+                    <td style="padding: 10px;">${actionHtml}</td>
                 `;
                 tbody.appendChild(tr);
 

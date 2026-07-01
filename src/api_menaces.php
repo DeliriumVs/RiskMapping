@@ -3,83 +3,101 @@
 header('Content-Type: application/json; charset=utf-8');
 require 'db.php';
 
-// 1. Vérification de sécurité (RBAC)
 $admin_role = $_SESSION['admin_role'] ?? 'lecteur';
-if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'MJ') { 
+if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'MJ') {
     http_response_code(403);
     echo json_encode(["status" => "error", "message" => "Accès refusé."]);
+    exit;
+}
+
+$analyse_id = (int)($_SESSION['analyse_id'] ?? 0);
+if (!$analyse_id) {
+    http_response_code(400);
+    echo json_encode(["status" => "error", "message" => "Aucune analyse active."]);
     exit;
 }
 
 $method = $_SERVER['REQUEST_METHOD'];
 
 try {
-    // ==========================================================
-    // LECTURE (GET)
-    // ==========================================================
     if ($method === 'GET') {
-        $menaces = $pdo->query("SELECT * FROM menaces ORDER BY type_source ASC")->fetchAll();
-        echo json_encode([
-            "status" => "success", 
-            "data" => $menaces,
-            "user_role" => $admin_role
-        ]);
+        $stmt = $pdo->prepare("SELECT * FROM menaces WHERE analyse_id=? ORDER BY id ASC");
+        $stmt->execute([$analyse_id]);
+        echo json_encode(["status" => "success", "data" => $stmt->fetchAll(), "user_role" => $admin_role]);
         exit;
     }
 
-    // ==========================================================
-    // CRÉATION (POST)
-    // ==========================================================
-    elseif ($method === 'POST') {
+    if ($method === 'POST') {
         if ($admin_role === 'lecteur') {
             http_response_code(403);
             echo json_encode(["status" => "error", "message" => "Droits insuffisants."]);
             exit;
         }
+        $input  = json_decode(file_get_contents('php://input'), true);
+        $type   = trim($input['type_source'] ?? '');
+        $motiv  = trim($input['motivation']  ?? '');
 
-        $input = json_decode(file_get_contents('php://input'), true);
-        
-        $type = trim($input['type_source'] ?? '');
-        $motiv = trim($input['motivation'] ?? '');
-        $capa = trim($input['niveau_capacite'] ?? '');
-
-        if (empty($type) || empty($capa)) {
+        if (empty($type)) {
             http_response_code(400);
-            echo json_encode(["status" => "error", "message" => "La source et la capacité sont obligatoires."]);
+            echo json_encode(["status" => "error", "message" => "Le type de source est obligatoire."]);
             exit;
         }
 
-        $stmt = $pdo->prepare("INSERT INTO menaces (type_source, motivation, niveau_capacite) VALUES (?, ?, ?)");
-        $stmt->execute([$type, $motiv, $capa]);
-        
-        log_audit($pdo, $_SESSION['admin_id'], 'THREAT_ADDED', "Ajout menace : $type");
-        
-        echo json_encode(["status" => "success", "message" => "Source de menace ajoutée."]);
+        $m_note = isset($input['motivation_note']) ? max(1, min(3, (int)$input['motivation_note'])) : null;
+        $r_note = isset($input['ressources_note']) ? max(1, min(3, (int)$input['ressources_note'])) : null;
+        $a_note = isset($input['activite_note'])   ? max(1, min(3, (int)$input['activite_note']))   : null;
+
+        $pdo->prepare("INSERT INTO menaces (analyse_id, type_source, motivation, motivation_note, ressources_note, activite_note) VALUES (?, ?, ?, ?, ?, ?)")
+            ->execute([$analyse_id, $type, $motiv, $m_note, $r_note, $a_note]);
+
+        log_audit($pdo, $_SESSION['admin_id'], 'THREAT_ADDED', "Source de risque ajoutée : $type");
+        echo json_encode(["status" => "success", "message" => "Source de risque ajoutée.", "id" => (int)$pdo->lastInsertId()]);
         exit;
     }
 
-    // ==========================================================
-    // SUPPRESSION (DELETE)
-    // ==========================================================
-    elseif ($method === 'DELETE') {
+    if ($method === 'PATCH') {
+        if ($admin_role === 'lecteur') {
+            http_response_code(403);
+            echo json_encode(["status" => "error", "message" => "Droits insuffisants."]);
+            exit;
+        }
+        $input   = json_decode(file_get_contents('php://input'), true);
+        $id      = (int)($input['id'] ?? 0);
+        $field   = $input['field']  ?? '';
+        $value   = array_key_exists('value', $input) ? $input['value'] : null;
+
+        $allowed = ['motivation_note', 'ressources_note', 'activite_note'];
+        if (!$id || !in_array($field, $allowed, true)) {
+            http_response_code(400);
+            echo json_encode(["status" => "error", "message" => "Champ ou ID invalide."]);
+            exit;
+        }
+
+        $sanitized = $value === null ? null : max(1, min(3, (int)$value));
+        $pdo->prepare("UPDATE menaces SET $field=? WHERE id=? AND analyse_id=?")
+            ->execute([$sanitized, $id, $analyse_id]);
+
+        echo json_encode(["status" => "success", "message" => "Note mise à jour."]);
+        exit;
+    }
+
+    if ($method === 'DELETE') {
         if ($admin_role !== 'admin') {
             http_response_code(403);
             echo json_encode(["status" => "error", "message" => "Seul un administrateur peut supprimer."]);
             exit;
         }
-
-        $input = json_decode(file_get_contents('php://input'), true);
+        $input  = json_decode(file_get_contents('php://input'), true);
         $id_del = (int)($input['id'] ?? 0);
 
         if ($id_del > 0) {
-            $stmt_info = $pdo->prepare("SELECT type_source FROM menaces WHERE id = ?");
-            $stmt_info->execute([$id_del]);
-            $nom_del = $stmt_info->fetchColumn() ?: "ID $id_del";
+            $nom_stmt = $pdo->prepare("SELECT type_source FROM menaces WHERE id=? AND analyse_id=?");
+            $nom_stmt->execute([$id_del, $analyse_id]);
+            $nom_del = $nom_stmt->fetchColumn() ?: "ID $id_del";
 
-            $pdo->prepare("DELETE FROM menaces WHERE id = ?")->execute([$id_del]);
-            log_audit($pdo, $_SESSION['admin_id'], 'THREAT_DELETED', "Suppression menace : $nom_del");
-            
-            echo json_encode(["status" => "success", "message" => "Menace supprimée."]);
+            $pdo->prepare("DELETE FROM menaces WHERE id=? AND analyse_id=?")->execute([$id_del, $analyse_id]);
+            log_audit($pdo, $_SESSION['admin_id'], 'THREAT_DELETED', "Source de risque supprimée : $nom_del");
+            echo json_encode(["status" => "success", "message" => "Source de risque supprimée."]);
         } else {
             http_response_code(400);
             echo json_encode(["status" => "error", "message" => "ID invalide."]);
@@ -87,10 +105,8 @@ try {
         exit;
     }
 
-    else {
-        http_response_code(405);
-        echo json_encode(["status" => "error", "message" => "Méthode non autorisée."]);
-    }
+    http_response_code(405);
+    echo json_encode(["status" => "error", "message" => "Méthode non autorisée."]);
 
 } catch (Exception $e) {
     http_response_code(500);
