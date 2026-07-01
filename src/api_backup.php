@@ -10,18 +10,22 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'MJ' || ($_SESSION['admin
 
 // Ordre d'export (indépendants → dépendants)
 const EXPORT_TABLES = [
-    'equipes', 'valeurs_metier', 'menaces', 'biens_supports', 'valeur_bien_support',
-    'objectifs_vises', 'admin_users', 'sessions', 'participants', 'scenarios_bruts',
-    'scenario_valeurs_metier', 'scenario_menaces', 'contributions', 'votes_poker',
-    'actions_traitement', 'audit_logs'
+    'admin_users',
+    'entites', 'analyses',
+    'equipes', 'valeurs_metier', 'menaces',
+    'biens_supports', 'valeur_bien_support', 'objectifs_vises',
+    'parties_prenantes', 'evenements_redoutes',
+    'scenarios_strategiques', 'scenarios_bruts', 'actions_traitement',
+    'audit_logs'
 ];
 
 // Ordre de suppression lors de l'import (plus dépendant en premier)
 const DELETE_ORDER = [
-    'audit_logs', 'actions_traitement', 'votes_poker', 'contributions',
-    'scenario_menaces', 'scenario_valeurs_metier', 'scenarios_bruts',
-    'participants', 'sessions', 'objectifs_vises', 'valeur_bien_support',
-    'biens_supports', 'menaces', 'valeurs_metier', 'equipes'
+    'audit_logs', 'actions_traitement', 'scenarios_bruts', 'scenarios_strategiques',
+    'evenements_redoutes', 'parties_prenantes',
+    'objectifs_vises', 'valeur_bien_support', 'biens_supports',
+    'menaces', 'valeurs_metier', 'equipes',
+    'analyses', 'entites'
     // 'admin_users' volontairement absent : on ne remplace jamais les comptes à l'import
 ];
 

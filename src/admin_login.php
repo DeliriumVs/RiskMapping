@@ -47,7 +47,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
             
             log_audit($pdo, $user['id'], 'LOGIN_SUCCESS', "Connexion réussie.");
-            header("Location: registre_risques.php");
+            header("Location: select_analyse.php");
             exit;
         }
         

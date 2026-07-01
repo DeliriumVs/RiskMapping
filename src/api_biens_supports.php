@@ -10,22 +10,28 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'MJ') {
 }
 
 $admin_role = $_SESSION['admin_role'] ?? 'lecteur';
+$analyse_id = (int)($_SESSION['analyse_id'] ?? 0);
+if (!$analyse_id) {
+    http_response_code(400);
+    echo json_encode(['status' => 'error', 'message' => 'Aucune analyse active.']);
+    exit;
+}
+
 $method = $_SERVER['REQUEST_METHOD'];
 
 try {
 
-    // ==========================================================
-    // GET : Récupérer tous les BS + toutes les VMs (pour les checkboxes)
-    // ==========================================================
     if ($method === 'GET') {
-        $stmt = $pdo->query("
+        $stmt = $pdo->prepare("
             SELECT bs.id, bs.nom, bs.type_bien, bs.description,
-                   GROUP_CONCAT(vbs.valeur_metier_id ORDER BY vbs.valeur_metier_id ASC) as vm_ids
+                   GROUP_CONCAT(vbs.valeur_metier_id ORDER BY vbs.valeur_metier_id ASC) AS vm_ids
             FROM biens_supports bs
             LEFT JOIN valeur_bien_support vbs ON bs.id = vbs.bien_support_id
+            WHERE bs.analyse_id = ?
             GROUP BY bs.id
             ORDER BY bs.id ASC
         ");
+        $stmt->execute([$analyse_id]);
         $data = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
         foreach ($data as &$row) {
@@ -35,29 +41,25 @@ try {
         }
         unset($row);
 
-        $vms = $pdo->query("SELECT id, nom, critere_impacte FROM valeurs_metier ORDER BY id ASC")
-                   ->fetchAll(PDO::FETCH_ASSOC);
+        $vms = $pdo->prepare("SELECT id, nom, critere_impacte FROM valeurs_metier WHERE analyse_id=? ORDER BY id ASC");
+        $vms->execute([$analyse_id]);
 
         echo json_encode([
             'status'         => 'success',
             'data'           => $data,
-            'valeurs_metier' => $vms,
+            'valeurs_metier' => $vms->fetchAll(PDO::FETCH_ASSOC),
             'user_role'      => $admin_role
         ]);
         exit;
     }
 
-    // ==========================================================
-    // POST : Ajouter un Bien Support (+ liens VM optionnels)
-    // ==========================================================
     if ($method === 'POST') {
         if ($admin_role === 'lecteur') {
             http_response_code(403);
             echo json_encode(['status' => 'error', 'message' => 'Droits insuffisants.']);
             exit;
         }
-
-        $input = json_decode(file_get_contents('php://input'), true);
+        $input       = json_decode(file_get_contents('php://input'), true);
         $nom         = trim($input['nom']         ?? '');
         $type_bien   = trim($input['type_bien']   ?? 'Autre');
         $description = trim($input['description'] ?? '');
@@ -69,8 +71,8 @@ try {
             exit;
         }
 
-        $stmt = $pdo->prepare("INSERT INTO biens_supports (nom, type_bien, description) VALUES (?, ?, ?)");
-        $stmt->execute([$nom, $type_bien, $description]);
+        $stmt = $pdo->prepare("INSERT INTO biens_supports (analyse_id, nom, type_bien, description) VALUES (?, ?, ?, ?)");
+        $stmt->execute([$analyse_id, $nom, $type_bien, $description]);
         $bs_id = (int)$pdo->lastInsertId();
 
         if (!empty($vm_ids)) {
@@ -80,22 +82,17 @@ try {
             }
         }
 
-        log_audit($pdo, $_SESSION['admin_id'], 'BS_ADDED', "Ajout Bien Support : $nom");
-
+        log_audit($pdo, $_SESSION['admin_id'], 'BS_ADDED', "Bien Support ajouté : $nom");
         echo json_encode(['status' => 'success', 'message' => "Bien Support « $nom » ajouté."]);
         exit;
     }
 
-    // ==========================================================
-    // PATCH : Mettre à jour les liens VM d'un BS existant
-    // ==========================================================
     if ($method === 'PATCH') {
         if ($admin_role === 'lecteur') {
             http_response_code(403);
             echo json_encode(['status' => 'error', 'message' => 'Droits insuffisants.']);
             exit;
         }
-
         $input  = json_decode(file_get_contents('php://input'), true);
         $bs_id  = (int)($input['bs_id']  ?? 0);
         $vm_ids = $input['vm_ids'] ?? [];
@@ -106,7 +103,7 @@ try {
             exit;
         }
 
-        $pdo->prepare("DELETE FROM valeur_bien_support WHERE bien_support_id = ?")->execute([$bs_id]);
+        $pdo->prepare("DELETE FROM valeur_bien_support WHERE bien_support_id=?")->execute([$bs_id]);
 
         if (!empty($vm_ids)) {
             $stmtLink = $pdo->prepare("INSERT IGNORE INTO valeur_bien_support (valeur_metier_id, bien_support_id) VALUES (?, ?)");
@@ -119,16 +116,12 @@ try {
         exit;
     }
 
-    // ==========================================================
-    // DELETE : Supprimer un Bien Support (admin uniquement)
-    // ==========================================================
     if ($method === 'DELETE') {
         if ($admin_role !== 'admin') {
             http_response_code(403);
             echo json_encode(['status' => 'error', 'message' => 'Seul un administrateur peut supprimer.']);
             exit;
         }
-
         $input = json_decode(file_get_contents('php://input'), true);
         $id    = (int)($input['id'] ?? 0);
 
@@ -138,14 +131,12 @@ try {
             exit;
         }
 
-        $nom_del = $pdo->prepare("SELECT nom FROM biens_supports WHERE id = ?");
-        $nom_del->execute([$id]);
-        $nom_del = $nom_del->fetchColumn() ?: "ID $id";
+        $nom_stmt = $pdo->prepare("SELECT nom FROM biens_supports WHERE id=? AND analyse_id=?");
+        $nom_stmt->execute([$id, $analyse_id]);
+        $nom_del = $nom_stmt->fetchColumn() ?: "ID $id";
 
-        $pdo->prepare("DELETE FROM biens_supports WHERE id = ?")->execute([$id]);
-
-        log_audit($pdo, $_SESSION['admin_id'], 'BS_DELETED', "Suppression Bien Support : $nom_del");
-
+        $pdo->prepare("DELETE FROM biens_supports WHERE id=? AND analyse_id=?")->execute([$id, $analyse_id]);
+        log_audit($pdo, $_SESSION['admin_id'], 'BS_DELETED', "Bien Support supprimé : $nom_del");
         echo json_encode(['status' => 'success', 'message' => "Bien Support « $nom_del » supprimé."]);
         exit;
     }
