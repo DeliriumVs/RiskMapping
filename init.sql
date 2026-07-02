@@ -187,14 +187,18 @@ CREATE TABLE scenarios_strategiques (
 -- ============================================================
 
 CREATE TABLE evenements_redoutes (
-    id               INT AUTO_INCREMENT PRIMARY KEY,
-    analyse_id       INT NOT NULL,
-    valeur_metier_id INT NOT NULL,
-    categorie        ENUM('Financier','Opérationnel','Juridique','Image','Santé') NOT NULL,
-    description      VARCHAR(255) NOT NULL,
-    impact           ENUM('Mineur','Significatif','Majeur','Critique') NOT NULL DEFAULT 'Mineur',
-    notes            TEXT NULL,
-    created_at       TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    id                   INT AUTO_INCREMENT PRIMARY KEY,
+    analyse_id           INT NOT NULL,
+    valeur_metier_id     INT NOT NULL,
+    categorie            ENUM('Financier','Opérationnel','Juridique','Image','Santé') NOT NULL,
+    description          VARCHAR(255) NOT NULL,
+    impact               ENUM('Mineur','Significatif','Majeur','Critique') NOT NULL DEFAULT 'Mineur',
+    notes                TEXT NULL,
+    dict_disponibilite   TINYINT(1) NOT NULL DEFAULT 0 COMMENT 'Critère DICT : Disponibilité',
+    dict_integrite       TINYINT(1) NOT NULL DEFAULT 0 COMMENT 'Critère DICT : Intégrité',
+    dict_confidentialite TINYINT(1) NOT NULL DEFAULT 0 COMMENT 'Critère DICT : Confidentialité',
+    dict_tracabilite     TINYINT(1) NOT NULL DEFAULT 0 COMMENT 'Critère DICT : Traçabilité',
+    created_at           TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (analyse_id)       REFERENCES analyses(id)       ON DELETE CASCADE,
     FOREIGN KEY (valeur_metier_id) REFERENCES valeurs_metier(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
