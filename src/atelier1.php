@@ -47,6 +47,27 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'MJ') {
 .er-del { background:none; border:none; color:#484f58; cursor:pointer; font-size:0.85rem; padding:2px 6px; flex-shrink:0; }
 .er-del:hover { color:#da291c; }
 
+/* DICT badges */
+.dict-wrap { display:flex; gap:4px; flex-shrink:0; }
+.dict-badge { font-size:0.68rem; font-weight:bold; padding:2px 6px; border-radius:4px; cursor:pointer; border:1px solid transparent; transition:0.15s; user-select:none; }
+.dict-badge.on  { opacity:1; }
+.dict-badge.off { opacity:0.2; filter:grayscale(0.6); }
+.dict-badge.readonly { cursor:default; }
+.dict-D { background:rgba(34,197,94,0.18);  color:#22c55e; border-color:rgba(34,197,94,0.5); }
+.dict-I { background:rgba(245,158,11,0.18); color:#f59e0b; border-color:rgba(245,158,11,0.5); }
+.dict-C { background:rgba(59,130,246,0.18); color:#60a5fa; border-color:rgba(59,130,246,0.5); }
+.dict-T { background:rgba(168,85,247,0.18); color:#a855f7; border-color:rgba(168,85,247,0.5); }
+
+/* DICT checkboxes in form */
+.dict-checks { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+.dict-check-lbl { display:flex; align-items:center; gap:5px; cursor:pointer; font-size:0.8rem; color:#c9d1d9; }
+.dict-check-lbl input { accent-color:#3b82f6; width:14px; height:14px; cursor:pointer; }
+
+/* Mise en perspective DICT par VM */
+.dict-perspective { display:flex; gap:10px; flex-wrap:wrap; padding:8px 16px; background:#0d1117; border-top:1px solid #1c2128; }
+.dict-persp-item { display:flex; align-items:center; gap:5px; font-size:0.75rem; color:#8b949e; }
+.dict-persp-count { font-weight:bold; }
+
 /* Add ER form */
 .er-add-form { background:#161b22; padding:14px 16px; border-top:1px dashed #30363d; display:none; }
 .er-add-form.open { display:block; }
@@ -264,6 +285,15 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'MJ') {
                                 '<div><label style="font-size:0.75rem; color:#8b949e; display:block; margin-bottom:4px;">&nbsp;</label>' +
                                     '<button class="btn-er-add" onclick="addER(' + vm.id + ')">Ajouter</button></div>' +
                             '</div>' +
+                            '<div style="padding:8px 0 4px; display:flex; align-items:center; gap:12px; flex-wrap:wrap;">' +
+                                '<span style="font-size:0.75rem; color:#8b949e;">Critères DICT impactés :</span>' +
+                                '<div class="dict-checks">' +
+                                    '<label class="dict-check-lbl"><input type="checkbox" id="er-dict-d-' + vm.id + '"><span class="dict-badge dict-D on" style="cursor:default;">D</span> Disponibilité</label>' +
+                                    '<label class="dict-check-lbl"><input type="checkbox" id="er-dict-i-' + vm.id + '"><span class="dict-badge dict-I on" style="cursor:default;">I</span> Intégrité</label>' +
+                                    '<label class="dict-check-lbl"><input type="checkbox" id="er-dict-c-' + vm.id + '"><span class="dict-badge dict-C on" style="cursor:default;">C</span> Confidentialité</label>' +
+                                    '<label class="dict-check-lbl"><input type="checkbox" id="er-dict-t-' + vm.id + '"><span class="dict-badge dict-T on" style="cursor:default;">T</span> Traçabilité</label>' +
+                                '</div>' +
+                            '</div>' +
                         '</div>'
                     : '') +
                 '</div>' +
@@ -271,11 +301,49 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'MJ') {
         }).join('');
     }
 
+    var DICT_DEF = [
+        { key:'dict_disponibilite',   letter:'D', label:'Disponibilité',   cls:'dict-D' },
+        { key:'dict_integrite',       letter:'I', label:'Intégrité',       cls:'dict-I' },
+        { key:'dict_confidentialite', letter:'C', label:'Confidentialité', cls:'dict-C' },
+        { key:'dict_tracabilite',     letter:'T', label:'Traçabilité',     cls:'dict-T' }
+    ];
+
+    function dictBadges(er) {
+        return '<div class="dict-wrap">' +
+            DICT_DEF.map(function(d) {
+                var active = parseInt(er[d.key]) === 1;
+                var roClass = CAN_EDIT ? '' : ' readonly';
+                var click   = CAN_EDIT
+                    ? ' onclick="toggleDICT(' + er.id + ',\'' + d.key + '\',' + (active ? 0 : 1) + ')"'
+                    : '';
+                return '<span class="dict-badge ' + d.cls + (active ? ' on' : ' off') + roClass + '"' +
+                    click + ' title="' + d.label + (CAN_EDIT ? ' — cliquer pour ' + (active ? 'retirer' : 'cocher') : '') + '">' +
+                    d.letter + '</span>';
+            }).join('') +
+        '</div>';
+    }
+
+    function dictPerspective(ers) {
+        if (ers.length === 0) return '';
+        var counts = { dict_disponibilite:0, dict_integrite:0, dict_confidentialite:0, dict_tracabilite:0 };
+        ers.forEach(function(er) { DICT_DEF.forEach(function(d) { if (parseInt(er[d.key])) counts[d.key]++; }); });
+        var items = DICT_DEF.map(function(d) {
+            var n = counts[d.key];
+            return '<span class="dict-persp-item">' +
+                '<span class="dict-badge ' + d.cls + (n > 0 ? ' on' : ' off') + '" style="cursor:default;">' + d.letter + '</span>' +
+                '<span class="dict-persp-count" style="color:' + (n > 0 ? '#c9d1d9' : '#484f58') + ';">' + n + '</span>' +
+            '</span>';
+        }).join('');
+        return '<div class="dict-perspective" title="Nombre d\'ER impactant chaque critère DICT">' +
+            '<span style="font-size:0.72rem; color:#484f58; align-self:center;">Mise en perspective DICT :</span>' +
+            items + '</div>';
+    }
+
     function renderERs(vmId, ers) {
         if (ers.length === 0) {
             return '<div style="padding:12px 16px; color:#484f58; font-size:0.85rem; font-style:italic;">Aucun événement redouté défini.</div>';
         }
-        return ers.map(function(er) {
+        var rows = ers.map(function(er) {
             var erId = 'ER-' + String(er.id).padStart(3,'0');
             return '<div class="er-row">' +
                 '<span class="er-num">' + esc(erId) + '</span>' +
@@ -283,14 +351,16 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'MJ') {
                 '<span class="er-desc">' + esc(er.description) +
                     (er.notes ? '<br><span style="font-size:0.78rem; color:#8b949e;">' + esc(er.notes) + '</span>' : '') +
                 '</span>' +
+                dictBadges(er) +
                 (CAN_EDIT ?
-                    '<span class="er-impact imp-' + er.impact + '" onclick="cycleImpact(' + er.id + ', \'' + er.impact + '\', ' + vmId + ')" title="Cliquer pour changer">' + esc(er.impact) + '</span>'
+                    '<span class="er-impact imp-' + er.impact + '" onclick="cycleImpact(' + er.id + ', \'' + er.impact + '\', ' + vmId + ')" title="Cliquer pour changer l\'impact ↻">' + esc(er.impact) + ' ↻</span>'
                 :
                     '<span class="er-impact imp-' + er.impact + '">' + esc(er.impact) + '</span>'
                 ) +
                 (IS_ADMIN ? '<button class="er-del" onclick="deleteER(' + er.id + ', ' + vmId + ')" title="Supprimer">🗑</button>' : '') +
             '</div>';
         }).join('');
+        return rows + dictPerspective(ers);
     }
 
     // -------------------------------------------------------
@@ -348,16 +418,33 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'MJ') {
                 categorie: document.getElementById('er-cat-' + vmId).value,
                 impact:    document.getElementById('er-imp-' + vmId).value,
                 description: desc,
-                notes: document.getElementById('er-notes-' + vmId).value.trim()
+                notes: document.getElementById('er-notes-' + vmId).value.trim(),
+                dict_disponibilite:   document.getElementById('er-dict-d-' + vmId).checked ? 1 : 0,
+                dict_integrite:       document.getElementById('er-dict-i-' + vmId).checked ? 1 : 0,
+                dict_confidentialite: document.getElementById('er-dict-c-' + vmId).checked ? 1 : 0,
+                dict_tracabilite:     document.getElementById('er-dict-t-' + vmId).checked ? 1 : 0
             })
         });
         var json = await res.json();
         showMsg(json.message, json.status === 'success');
         if (json.status === 'success') {
-            document.getElementById('er-desc-' + vmId).value  = '';
-            document.getElementById('er-notes-' + vmId).value = '';
+            document.getElementById('er-desc-'   + vmId).value = '';
+            document.getElementById('er-notes-'  + vmId).value = '';
+            document.getElementById('er-dict-d-' + vmId).checked = false;
+            document.getElementById('er-dict-i-' + vmId).checked = false;
+            document.getElementById('er-dict-c-' + vmId).checked = false;
+            document.getElementById('er-dict-t-' + vmId).checked = false;
             load();
         }
+    };
+
+    window.toggleDICT = async function(id, field, value) {
+        var payload = { id: id };
+        payload[field] = value;
+        var res  = await fetch(API_ER, { method:'PATCH', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+        var json = await res.json();
+        if (json.status === 'success') load();
+        else showMsg(json.message, false);
     };
 
     window.cycleImpact = async function(id, current, vmId) {

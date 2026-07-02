@@ -65,6 +65,10 @@ try {
         $description     = trim($input['description'] ?? '');
         $impact          = trim($input['impact'] ?? 'Mineur');
         $notes           = trim($input['notes'] ?? '');
+        $dict_d          = (int)!empty($input['dict_disponibilite']);
+        $dict_i          = (int)!empty($input['dict_integrite']);
+        $dict_c          = (int)!empty($input['dict_confidentialite']);
+        $dict_t          = (int)!empty($input['dict_tracabilite']);
 
         if (!$vm_id || empty($description) || !in_array($categorie, $CATEGORIES) || !in_array($impact, $IMPACTS)) {
             http_response_code(400);
@@ -73,9 +77,12 @@ try {
         }
 
         $pdo->prepare("
-            INSERT INTO evenements_redoutes (analyse_id, valeur_metier_id, categorie, description, impact, notes)
-            VALUES (?, ?, ?, ?, ?, ?)
-        ")->execute([$analyse_id, $vm_id, $categorie, $description, $impact, $notes]);
+            INSERT INTO evenements_redoutes
+                (analyse_id, valeur_metier_id, categorie, description, impact, notes,
+                 dict_disponibilite, dict_integrite, dict_confidentialite, dict_tracabilite)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ")->execute([$analyse_id, $vm_id, $categorie, $description, $impact, $notes,
+                     $dict_d, $dict_i, $dict_c, $dict_t]);
 
         log_audit($pdo, $_SESSION['admin_id'], 'ER_ADDED', "ER ajouté : $categorie / $description (VM #$vm_id)");
         echo json_encode(['status' => 'success', 'message' => 'Événement Redouté ajouté.', 'id' => (int)$pdo->lastInsertId()]);
@@ -107,6 +114,13 @@ try {
         if ($notes !== null) {
             $pdo->prepare("UPDATE evenements_redoutes SET notes=? WHERE id=? AND analyse_id=?")
                 ->execute([$notes, $id, $analyse_id]);
+        }
+        $DICT_COLS = ['dict_disponibilite','dict_integrite','dict_confidentialite','dict_tracabilite'];
+        foreach ($DICT_COLS as $col) {
+            if (isset($input[$col])) {
+                $pdo->prepare("UPDATE evenements_redoutes SET $col=? WHERE id=? AND analyse_id=?")
+                    ->execute([(int)(bool)$input[$col], $id, $analyse_id]);
+            }
         }
 
         echo json_encode(['status' => 'success', 'message' => 'Événement Redouté mis à jour.']);
