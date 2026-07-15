@@ -63,26 +63,28 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'MJ') {
 .matrix-bottom { display:flex; gap:24px; justify-content:center; flex-wrap:wrap; margin-top:28px; padding-top:20px; border-top:1px solid #21262d; width:100%; }
 
 /* ── Scénarios Stratégiques ───────────────────────────── */
-.ss-card  { background:#0d1117; border:1px solid #30363d; border-radius:6px; padding:14px 16px; margin-bottom:10px; display:flex; align-items:flex-start; gap:12px; }
+.ss-card     { background:#0d1117; border:1px solid #30363d; border-radius:8px; padding:16px 20px; margin-bottom:12px; display:flex; flex-direction:column; gap:12px; }
 .ss-card:hover { border-color:#484f58; }
-.ss-id    { font-family:monospace; font-size:0.7rem; color:#8b949e; white-space:nowrap; margin-top:2px; }
-.ss-body  { flex:1; min-width:0; }
-.ss-path  { display:flex; align-items:center; gap:6px; flex-wrap:wrap; margin-bottom:6px; }
-.ss-arrow { color:#484f58; font-size:0.9rem; }
-.sr-chip  { font-size:0.72rem; padding:2px 8px; border-radius:10px; background:rgba(218,41,28,0.12); color:#da291c; border:1px solid rgba(218,41,28,0.3); }
-.pp-chip  { font-size:0.72rem; padding:2px 8px; border-radius:10px; background:rgba(167,139,250,0.12); color:#a78bfa; border:1px solid rgba(167,139,250,0.3); }
-.ov-chip  { font-size:0.72rem; padding:2px 8px; border-radius:10px; background:rgba(59,130,246,0.12); color:#60a5fa; border:1px solid rgba(59,130,246,0.3); }
-.ss-desc  { color:#8b949e; font-size:0.82rem; margin-top:4px; font-style:italic; }
-.ss-right { display:flex; flex-direction:column; align-items:flex-end; gap:6px; flex-shrink:0; }
-.ss-stat  { font-size:0.72rem; padding:3px 9px; border-radius:10px; cursor:pointer; font-weight:bold; white-space:nowrap; }
-.ss-a { background:rgba(245,158,11,0.15); color:#f59e0b; border:1px solid #f59e0b44; }
-.ss-r { background:rgba(34,197,94,0.15);  color:#22c55e; border:1px solid #22c55e44; }
-.ss-n { background:rgba(139,148,158,0.12);color:#8b949e; border:1px solid #8b949e44; }
-.ss-del { background:none; border:none; color:#484f58; cursor:pointer; font-size:0.8rem; padding:2px 4px; }
+.ss-top      { display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+.ss-id       { font-family:monospace; font-size:0.8rem; color:#8b949e; white-space:nowrap; flex-shrink:0; }
+.ss-path     { display:flex; align-items:center; gap:8px; flex-wrap:wrap; flex:1; }
+.ss-arrow    { color:#484f58; font-size:1rem; }
+.sr-chip     { font-size:0.85rem; padding:4px 12px; border-radius:10px; background:rgba(218,41,28,0.12); color:#da291c; border:1px solid rgba(218,41,28,0.3); font-weight:600; }
+.pp-chip     { font-size:0.85rem; padding:4px 12px; border-radius:10px; background:rgba(167,139,250,0.12); color:#a78bfa; border:1px solid rgba(167,139,250,0.3); font-weight:600; }
+.ov-chip     { font-size:0.85rem; padding:4px 12px; border-radius:10px; background:rgba(59,130,246,0.12); color:#60a5fa; border:1px solid rgba(59,130,246,0.3); font-weight:600; }
+.ss-desc     { color:#8b949e; font-size:0.85rem; font-style:italic; padding-left:4px; }
+.ss-controls { display:flex; align-items:center; gap:14px; flex-wrap:wrap; border-top:1px solid #21262d; padding-top:10px; }
+.ss-stat     { font-size:0.85rem; padding:6px 16px; border-radius:8px; cursor:pointer; font-weight:bold; white-space:nowrap; }
+.ss-a { background:rgba(245,158,11,0.15); color:#f59e0b; border:1px solid #f59e0b55; }
+.ss-r { background:rgba(34,197,94,0.15);  color:#22c55e; border:1px solid #22c55e55; }
+.ss-n { background:rgba(139,148,158,0.12);color:#8b949e; border:1px solid #8b949e55; }
+.ss-score-wrap { display:flex; align-items:center; gap:6px; }
+.ss-score-lbl  { font-size:0.78rem; color:#8b949e; white-space:nowrap; }
+.ss-del      { background:none; border:none; color:#484f58; cursor:pointer; font-size:0.9rem; padding:4px 6px; margin-left:auto; }
 .ss-del:hover { color:#da291c; }
-.pp-assign-sel { background:#161b22; border:1px solid rgba(167,139,250,0.4); color:#a78bfa; padding:3px 6px; border-radius:4px; font-size:0.72rem; cursor:pointer; }
-.score-sel { background:#0d1117; border:1px solid #30363d; color:#8b949e; padding:2px 4px; border-radius:4px; font-size:0.7rem; cursor:pointer; max-width:110px; }
-.score-sel.set { border-color:rgba(59,130,246,0.4); color:#c9d1d9; }
+.pp-assign-sel { background:#161b22; border:1px solid rgba(167,139,250,0.4); color:#a78bfa; padding:5px 8px; border-radius:6px; font-size:0.85rem; cursor:pointer; }
+.score-sel     { background:#0d1117; border:1px solid #30363d; color:#8b949e; padding:5px 6px; border-radius:6px; font-size:0.82rem; cursor:pointer; }
+.score-sel.set { border-color:rgba(59,130,246,0.45); color:#c9d1d9; }
 
 /* ── Formulaires ──────────────────────────────────────── */
 .a3-form  { background:#0d1117; border:1px solid #30363d; border-radius:8px; padding:16px; margin-bottom:16px; display:none; }
@@ -559,19 +561,19 @@ label.a3 { display:block; font-size:0.75rem; color:#8b949e; margin-bottom:4px; }
             var ovHtml = ss.ov_id ? '<span class="ss-arrow">→</span><span class="ov-chip">OV-'+String(ss.ov_id).padStart(3,'0')+' '+esc(ss.ov_desc||'')+'</span>' : '';
             var GRAV_OPTS = ['— nc —','1 Critique','2 Grave','3 Significative','4 Mineure'];
             var VRAI_OPTS = ['— nc —','1 Très faible','2 Faible','3 Élevée','4 Très élevée'];
-            function scoreHtml(id, field, val, opts) {
+            function scoreWrap(id, field, val, opts, lbl) {
                 if (!CAN_EDIT) {
                     return val > 0
-                        ? '<span style="font-size:0.72rem;color:#8b949e;">'+(field==='gravite'?'Grav.':'Vrai.')+'&nbsp;<span class="lvl-badge lvl-'+val+'" style="font-size:0.68rem;padding:1px 6px;">'+val+'</span></span>'
+                        ? '<div class="ss-score-wrap"><span class="ss-score-lbl">'+lbl+'</span><span class="lvl-badge lvl-'+val+'" style="font-size:0.78rem;padding:3px 10px;">'+opts[val]+'</span></div>'
                         : '';
                 }
-                var o = opts.map(function(lbl,i) {
-                    return '<option value="'+i+'"'+(i==val?' selected':'')+'>'+lbl+'</option>';
+                var o = opts.map(function(txt,i) {
+                    return '<option value="'+i+'"'+(i==val?' selected':'')+'>'+txt+'</option>';
                 }).join('');
-                return '<select class="score-sel'+(val>0?' set':'')+'" title="'+(field==='gravite'?'Gravité':'Vraisemblance')+'" onchange="patchSSScore('+id+',\''+field+'\',this.value)">'+o+'</select>';
+                return '<div class="ss-score-wrap"><span class="ss-score-lbl">'+lbl+'</span><select class="score-sel'+(val>0?' set':'')+'" onchange="patchSSScore('+id+',\''+field+'\',this.value)">'+o+'</select></div>';
             }
-            var gravHtml = scoreHtml(ss.id, 'gravite',       ss.gravite,       GRAV_OPTS);
-            var vraiHtml = scoreHtml(ss.id, 'vraisemblance', ss.vraisemblance, VRAI_OPTS);
+            var gravHtml = scoreWrap(ss.id, 'gravite',       ss.gravite,       GRAV_OPTS, 'Gravité :');
+            var vraiHtml = scoreWrap(ss.id, 'vraisemblance', ss.vraisemblance, VRAI_OPTS, 'Vraisemblance :');
             var statBtn = CAN_EDIT
                 ? '<span class="ss-stat '+stat.cls+'" onclick="cycleSS('+ss.id+',\''+stat.next+'\')" title="Cliquer pour changer">'+stat.label+'</span>'
                 : '<span class="ss-stat '+stat.cls+'">'+stat.label+'</span>';
@@ -600,18 +602,22 @@ label.a3 { display:block; font-size:0.75rem; color:#8b949e; margin-bottom:4px; }
                 ppHtml = '<span class="pp-chip" style="color:#484f58;border-color:#484f58;">À définir</span>';
             }
             return '<div class="ss-card">' +
-                '<span class="ss-id">' + esc(ssId) + '</span>' +
-                '<div class="ss-body">' +
+                '<div class="ss-top">' +
+                    '<span class="ss-id">' + esc(ssId) + '</span>' +
                     '<div class="ss-path">' +
                         '<span class="sr-chip">'+esc(srId)+' '+esc(ss.sr_nom)+'</span>' +
                         '<span class="ss-arrow">⤳</span>' +
                         ppHtml +
                         ovHtml +
                     '</div>' +
-                    (ss.description ? '<div class="ss-desc">' + esc(ss.description) + '</div>' : '') +
                 '</div>' +
-                '<div class="ss-right">' +
-                    statBtn + gravHtml + vraiHtml + registreEl + delBtn +
+                (ss.description ? '<div class="ss-desc">' + esc(ss.description) + '</div>' : '') +
+                '<div class="ss-controls">' +
+                    statBtn +
+                    gravHtml +
+                    vraiHtml +
+                    registreEl +
+                    delBtn +
                 '</div>' +
             '</div>';
         }).join('');
