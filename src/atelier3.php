@@ -80,6 +80,7 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'MJ') {
 .ss-n { background:rgba(139,148,158,0.12);color:#8b949e; border:1px solid #8b949e44; }
 .ss-del { background:none; border:none; color:#484f58; cursor:pointer; font-size:0.8rem; padding:2px 4px; }
 .ss-del:hover { color:#da291c; }
+.pp-assign-sel { background:#161b22; border:1px solid rgba(167,139,250,0.4); color:#a78bfa; padding:3px 6px; border-radius:4px; font-size:0.72rem; cursor:pointer; }
 
 /* ── Formulaires ──────────────────────────────────────── */
 .a3-form  { background:#0d1117; border:1px solid #30363d; border-radius:8px; padding:16px; margin-bottom:16px; display:none; }
@@ -251,10 +252,13 @@ label.a3 { display:block; font-size:0.75rem; color:#8b949e; margin-bottom:4px; }
     <div class="a3-pane" id="pane-ss">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
             <p style="margin:0; color:#8b949e; font-size:0.82rem;">
-                Un scénario stratégique = une SR qui exploite une PP pour atteindre un OV (retenu en Atelier 2).
+                Un scénario stratégique = une SR qui exploite (optionnellement via une PP) un OV (retenu en Atelier 2).
             </p>
             <?php if ($admin_role !== 'lecteur'): ?>
-            <button class="btn-open" onclick="toggleForm('form-ss')">➕ Ajouter un scénario</button>
+            <div style="display:flex; gap:8px;">
+                <button class="btn-open" onclick="importFromA2()" title="Générer automatiquement un scénario pour chaque OV retenu en Atelier 2">⚡ Générer depuis A2</button>
+                <button class="btn-open" onclick="toggleForm('form-ss')">➕ Ajouter un scénario</button>
+            </div>
             <?php endif; ?>
         </div>
 
@@ -262,7 +266,7 @@ label.a3 { display:block; font-size:0.75rem; color:#8b949e; margin-bottom:4px; }
         <div class="a3-form" id="form-ss">
             <div class="fg fg-3" style="margin-bottom:10px;">
                 <div><label class="a3">Source de Risque *</label><select id="ss-sr"><option value="">— choisir —</option></select></div>
-                <div><label class="a3">Partie Prenante *</label><select id="ss-pp"><option value="">— choisir —</option></select></div>
+                <div><label class="a3">Partie Prenante (optionnel)</label><select id="ss-pp"><option value="">— aucune / à définir —</option></select></div>
                 <div><label class="a3">Objectif Visé (retenu)</label><select id="ss-ov"><option value="">— aucun / à définir —</option></select></div>
             </div>
             <div class="fg fg-2" style="margin-bottom:10px;">
@@ -526,7 +530,7 @@ label.a3 { display:block; font-size:0.75rem; color:#8b949e; margin-bottom:4px; }
             selSR.innerHTML += '<option value="'+sr.id+'">SR-'+String(sr.id).padStart(3,'0')+' — '+esc(sr.type_source)+'</option>';
         });
         var selPP = document.getElementById('ss-pp');
-        selPP.innerHTML = '<option value="">— choisir —</option>';
+        selPP.innerHTML = '<option value="">— aucune / à définir —</option>';
         (json.pp_list||[]).forEach(function(pp) {
             selPP.innerHTML += '<option value="'+pp.id+'">PP-'+String(pp.id).padStart(3,'0')+' — '+esc(pp.nom)+'</option>';
         });
@@ -542,14 +546,13 @@ label.a3 { display:block; font-size:0.75rem; color:#8b949e; margin-bottom:4px; }
     function renderSS(data, userRole) {
         var el = document.getElementById('ss-list');
         if (!data || data.length === 0) {
-            el.innerHTML = '<div style="text-align:center;color:#8b949e;padding:30px;border:1px dashed #30363d;border-radius:8px;">Aucun scénario stratégique. Cliquez « Ajouter un scénario ».</div>';
+            el.innerHTML = '<div style="text-align:center;color:#8b949e;padding:30px;border:1px dashed #30363d;border-radius:8px;">Aucun scénario stratégique. Cliquez « Générer depuis A2 » ou « Ajouter un scénario ».</div>';
             return;
         }
         var SS_STAT = { a_evaluer:{cls:'ss-a',label:'À évaluer',next:'retenu'}, retenu:{cls:'ss-r',label:'Retenu',next:'non_retenu'}, non_retenu:{cls:'ss-n',label:'Non retenu',next:'a_evaluer'} };
         el.innerHTML = data.map(function(ss) {
             var ssId  = 'SS-' + String(ss.id).padStart(3,'0');
             var srId  = 'SR-' + String(ss.menace_id).padStart(3,'0');
-            var ppId  = 'PP-' + String(ss.pp_id).padStart(3,'0');
             var stat  = SS_STAT[ss.statut] || SS_STAT['a_evaluer'];
             var ovHtml = ss.ov_id ? '<span class="ss-arrow">→</span><span class="ov-chip">OV-'+String(ss.ov_id).padStart(3,'0')+' '+esc(ss.ov_desc||'')+'</span>' : '';
             var gravHtml = (ss.gravite > 0) ? '<span style="font-size:0.72rem;color:#8b949e;">Grav.&nbsp;<span class="lvl-badge lvl-'+ss.gravite+'" style="font-size:0.68rem;padding:1px 6px;">'+ss.gravite+'</span></span>' : '';
@@ -564,13 +567,27 @@ label.a3 { display:block; font-size:0.75rem; color:#8b949e; margin-bottom:4px; }
             } else if (CAN_EDIT && ss.statut === 'retenu') {
                 registreEl = '<button onclick="transferSS('+ss.id+')" style="font-size:0.7rem;padding:2px 9px;border-radius:4px;background:rgba(167,139,250,0.1);color:#a78bfa;border:1px solid rgba(167,139,250,0.35);cursor:pointer;white-space:nowrap;" title="Ajouter ce scénario au Registre des Risques">→ Envoyer au registre</button>';
             }
+            // PP : null → dropdown d'assignation si CAN_EDIT, sinon libellé "À définir"
+            var ppHtml;
+            if (ss.pp_id) {
+                var ppId = 'PP-' + String(ss.pp_id).padStart(3,'0');
+                ppHtml = '<span class="pp-chip">'+esc(ppId)+' '+esc(ss.pp_nom||'')+'</span>';
+            } else if (CAN_EDIT) {
+                var ppOpts = '<option value="">— aucune —</option>';
+                (ssCache.pp_list||[]).forEach(function(pp) {
+                    ppOpts += '<option value="'+pp.id+'">PP-'+String(pp.id).padStart(3,'0')+' — '+esc(pp.nom)+'</option>';
+                });
+                ppHtml = '<select class="pp-assign-sel" title="Assigner une Partie Prenante" onchange="assignPP('+ss.id+',this.value)">'+ppOpts+'</select>';
+            } else {
+                ppHtml = '<span class="pp-chip" style="color:#484f58;border-color:#484f58;">À définir</span>';
+            }
             return '<div class="ss-card">' +
                 '<span class="ss-id">' + esc(ssId) + '</span>' +
                 '<div class="ss-body">' +
                     '<div class="ss-path">' +
                         '<span class="sr-chip">'+esc(srId)+' '+esc(ss.sr_nom)+'</span>' +
                         '<span class="ss-arrow">⤳</span>' +
-                        '<span class="pp-chip">'+esc(ppId)+' '+esc(ss.pp_nom)+'</span>' +
+                        ppHtml +
                         ovHtml +
                     '</div>' +
                     (ss.description ? '<div class="ss-desc">' + esc(ss.description) + '</div>' : '') +
@@ -584,8 +601,8 @@ label.a3 { display:block; font-size:0.75rem; color:#8b949e; margin-bottom:4px; }
 
     window.createSS = async function() {
         var sr = parseInt(document.getElementById('ss-sr').value);
-        var pp = parseInt(document.getElementById('ss-pp').value);
-        if (!sr || !pp) { showMsg('SR et PP sont obligatoires.', false); return; }
+        if (!sr) { showMsg('La Source de Risque est obligatoire.', false); return; }
+        var pp = parseInt(document.getElementById('ss-pp').value) || null;
         var payload = {
             menace_id:    sr,
             pp_id:        pp,
@@ -602,6 +619,21 @@ label.a3 { display:block; font-size:0.75rem; color:#8b949e; margin-bottom:4px; }
             document.getElementById('form-ss').classList.remove('open');
             loadSS();
         }
+    };
+
+    window.importFromA2 = async function() {
+        if (!confirm('Générer automatiquement un Scénario Stratégique pour chaque Objectif Visé « Retenu » de l\'Atelier 2 ?\n\nLes doublons (même SR × OV) seront ignorés. La Partie Prenante pourra être assignée ensuite.')) return;
+        var res  = await fetch(API_SS, {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'import_from_a2'})});
+        var json = await res.json();
+        showMsg(json.message, json.status==='success');
+        if (json.status==='success') loadSS();
+    };
+
+    window.assignPP = async function(ssId, ppId) {
+        var payload = { id: ssId, pp_id: ppId ? parseInt(ppId) : null };
+        var res  = await fetch(API_SS, {method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+        var json = await res.json();
+        if (json.status==='success') loadSS(); else showMsg(json.message, false);
     };
 
     window.cycleSS = async function(id, next) {

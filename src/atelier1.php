@@ -101,7 +101,7 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'MJ') {
             <div class="atl-subtitle">Valeurs Métier · Événements Redoutés · Biens Supports</div>
         </div>
         <?php if ($admin_role !== 'lecteur'): ?>
-        <button onclick="toggleAddVm()" style="background:rgba(34,197,94,0.1); border:1px solid #22c55e; color:#22c55e; padding:7px 14px; border-radius:6px; cursor:pointer; font-size:0.85rem;">➕ Ajouter une VM</button>
+        <button onclick="toggleAddVM()" style="background:rgba(34,197,94,0.1); border:1px solid #22c55e; color:#22c55e; padding:7px 14px; border-radius:6px; cursor:pointer; font-size:0.85rem;">➕ Ajouter une VM</button>
         <?php endif; ?>
     </div>
 
@@ -123,7 +123,7 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'MJ') {
         </div>
         <div style="display:flex; gap:8px;">
             <button onclick="createVM()" style="background:#3b82f6; border:none; color:#fff; padding:8px 16px; border-radius:4px; cursor:pointer;">Créer</button>
-            <button onclick="toggleAddVm()" style="background:#30363d; border:none; color:#8b949e; padding:8px 14px; border-radius:4px; cursor:pointer;">Annuler</button>
+            <button onclick="toggleAddVM()" style="background:#30363d; border:none; color:#8b949e; padding:8px 14px; border-radius:4px; cursor:pointer;">Annuler</button>
         </div>
     </div>
     <?php endif; ?>
