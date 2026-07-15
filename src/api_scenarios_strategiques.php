@@ -25,10 +25,10 @@ try {
                    ov.description AS ov_desc,
                    sb.id          AS registre_id
             FROM scenarios_strategiques ss
-            JOIN menaces           m  ON m.id  = ss.menace_id
-            JOIN parties_prenantes pp ON pp.id = ss.pp_id
-            LEFT JOIN objectifs_vises ov ON ov.id = ss.ov_id
-            LEFT JOIN scenarios_bruts sb ON sb.source_atelier='atelier3' AND sb.source_id=ss.id AND sb.analyse_id=ss.analyse_id
+            JOIN menaces                m  ON m.id  = ss.menace_id
+            LEFT JOIN parties_prenantes pp ON pp.id = ss.pp_id
+            LEFT JOIN objectifs_vises   ov ON ov.id = ss.ov_id
+            LEFT JOIN scenarios_bruts   sb ON sb.source_atelier='atelier3' AND sb.source_id=ss.id AND sb.analyse_id=ss.analyse_id
             WHERE ss.analyse_id = ?
             ORDER BY ss.id ASC
         ");
@@ -75,7 +75,7 @@ try {
                 SELECT ss.*, m.type_source, pp.nom AS pp_nom, ov.description AS ov_desc
                 FROM scenarios_strategiques ss
                 JOIN menaces m ON m.id = ss.menace_id
-                JOIN parties_prenantes pp ON pp.id = ss.pp_id
+                LEFT JOIN parties_prenantes pp ON pp.id = ss.pp_id
                 LEFT JOIN objectifs_vises ov ON ov.id = ss.ov_id
                 WHERE ss.id=? AND ss.analyse_id=?
             ");
@@ -84,7 +84,8 @@ try {
             if (!$ss) { http_response_code(404); echo json_encode(['status'=>'error','message'=>'Scénario stratégique introuvable.']); exit; }
 
             $ssLabel = 'SS-' . str_pad($ss_id, 3, '0', STR_PAD_LEFT);
-            $titre   = $ssLabel . ' — ' . $ss['type_source'] . ' via ' . $ss['pp_nom'];
+            $titre   = $ssLabel . ' — ' . $ss['type_source'];
+            if (!empty($ss['pp_nom'])) $titre .= ' via ' . $ss['pp_nom'];
             if (!empty($ss['ov_desc'])) $titre .= ' → ' . $ss['ov_desc'];
             if (mb_strlen($titre) > 255) $titre = mb_substr($titre, 0, 252) . '…';
 
@@ -97,18 +98,45 @@ try {
             exit;
         }
 
+        // ── Import automatique depuis l'Atelier 2 (SR × OV Retenus) ─
+        if (($i['action'] ?? '') === 'import_from_a2') {
+            $ovs_stmt = $pdo->prepare("
+                SELECT ov.id AS ov_id, ov.menace_id
+                FROM objectifs_vises ov
+                WHERE ov.analyse_id=? AND ov.pertinence='Retenu'
+                ORDER BY ov.menace_id ASC, ov.id ASC
+            ");
+            $ovs_stmt->execute([$analyse_id]);
+            $ovs_rows = $ovs_stmt->fetchAll();
+
+            $created = 0;
+            $skipped = 0;
+            foreach ($ovs_rows as $row) {
+                // Déduplication : un seul SS par couple (menace_id, ov_id)
+                $chk = $pdo->prepare("SELECT id FROM scenarios_strategiques WHERE analyse_id=? AND menace_id=? AND ov_id=?");
+                $chk->execute([$analyse_id, $row['menace_id'], $row['ov_id']]);
+                if ($chk->fetchColumn()) { $skipped++; continue; }
+                $pdo->prepare("INSERT INTO scenarios_strategiques (analyse_id,menace_id,pp_id,ov_id) VALUES (?,?,NULL,?)")
+                    ->execute([$analyse_id, $row['menace_id'], $row['ov_id']]);
+                $created++;
+            }
+            log_audit($pdo,$_SESSION['admin_id'],'SS_IMPORTED_A2',"Import A2 : $created créés, $skipped ignorés");
+            echo json_encode(['status'=>'success','message'=>"$created scénarios stratégiques générés depuis l'Atelier 2.",'created'=>$created,'skipped'=>$skipped]);
+            exit;
+        }
+
         $menace_id = (int)($i['menace_id'] ?? 0);
-        $pp_id     = (int)($i['pp_id']     ?? 0);
+        $pp_id     = !empty($i['pp_id']) ? (int)$i['pp_id'] : null;
         $ov_id     = !empty($i['ov_id']) ? (int)$i['ov_id'] : null;
         $desc      = trim($i['description'] ?? '');
         $grav      = max(0, min(4, (int)($i['gravite']       ?? 0)));
         $vrai      = max(0, min(4, (int)($i['vraisemblance'] ?? 0)));
-        if (!$menace_id || !$pp_id) {
-            http_response_code(400); echo json_encode(['status'=>'error','message'=>'SR et PP sont obligatoires.']); exit;
+        if (!$menace_id) {
+            http_response_code(400); echo json_encode(['status'=>'error','message'=>'La Source de Risque est obligatoire.']); exit;
         }
         $pdo->prepare("INSERT INTO scenarios_strategiques (analyse_id,menace_id,pp_id,ov_id,description,gravite,vraisemblance) VALUES (?,?,?,?,?,?,?)")
             ->execute([$analyse_id,$menace_id,$pp_id,$ov_id,$desc,$grav,$vrai]);
-        log_audit($pdo,$_SESSION['admin_id'],'SS_ADDED',"Scénario stratégique ajouté SR#$menace_id × PP#$pp_id");
+        log_audit($pdo,$_SESSION['admin_id'],'SS_ADDED',"Scénario stratégique ajouté SR#$menace_id");
         echo json_encode(['status'=>'success','message'=>'Scénario stratégique ajouté.','id'=>(int)$pdo->lastInsertId()]);
         exit;
     }
@@ -128,6 +156,10 @@ try {
         }
         if (isset($i['vraisemblance'])) {
             $pdo->prepare("UPDATE scenarios_strategiques SET vraisemblance=? WHERE id=? AND analyse_id=?")->execute([max(0,min(4,(int)$i['vraisemblance'])),$id,$analyse_id]);
+        }
+        if (array_key_exists('pp_id', $i)) {
+            $new_pp = !empty($i['pp_id']) ? (int)$i['pp_id'] : null;
+            $pdo->prepare("UPDATE scenarios_strategiques SET pp_id=? WHERE id=? AND analyse_id=?")->execute([$new_pp,$id,$analyse_id]);
         }
         echo json_encode(['status'=>'success','message'=>'Scénario mis à jour.']);
         exit;

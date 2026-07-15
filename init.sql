@@ -169,7 +169,7 @@ CREATE TABLE scenarios_strategiques (
     id            INT AUTO_INCREMENT PRIMARY KEY,
     analyse_id    INT NOT NULL,
     menace_id     INT NOT NULL,
-    pp_id         INT NOT NULL,
+    pp_id         INT NULL,
     ov_id         INT NULL,
     description   TEXT NULL,
     gravite       TINYINT NOT NULL DEFAULT 0,
@@ -178,7 +178,7 @@ CREATE TABLE scenarios_strategiques (
     created_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (analyse_id) REFERENCES analyses(id)           ON DELETE CASCADE,
     FOREIGN KEY (menace_id)  REFERENCES menaces(id)            ON DELETE CASCADE,
-    FOREIGN KEY (pp_id)      REFERENCES parties_prenantes(id)  ON DELETE CASCADE,
+    FOREIGN KEY (pp_id)      REFERENCES parties_prenantes(id)  ON DELETE SET NULL,
     FOREIGN KEY (ov_id)      REFERENCES objectifs_vises(id)    ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
