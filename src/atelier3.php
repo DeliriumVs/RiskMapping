@@ -81,6 +81,8 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'MJ') {
 .ss-del { background:none; border:none; color:#484f58; cursor:pointer; font-size:0.8rem; padding:2px 4px; }
 .ss-del:hover { color:#da291c; }
 .pp-assign-sel { background:#161b22; border:1px solid rgba(167,139,250,0.4); color:#a78bfa; padding:3px 6px; border-radius:4px; font-size:0.72rem; cursor:pointer; }
+.score-sel { background:#0d1117; border:1px solid #30363d; color:#8b949e; padding:2px 4px; border-radius:4px; font-size:0.7rem; cursor:pointer; max-width:110px; }
+.score-sel.set { border-color:rgba(59,130,246,0.4); color:#c9d1d9; }
 
 /* ── Formulaires ──────────────────────────────────────── */
 .a3-form  { background:#0d1117; border:1px solid #30363d; border-radius:8px; padding:16px; margin-bottom:16px; display:none; }
@@ -555,17 +557,33 @@ label.a3 { display:block; font-size:0.75rem; color:#8b949e; margin-bottom:4px; }
             var srId  = 'SR-' + String(ss.menace_id).padStart(3,'0');
             var stat  = SS_STAT[ss.statut] || SS_STAT['a_evaluer'];
             var ovHtml = ss.ov_id ? '<span class="ss-arrow">→</span><span class="ov-chip">OV-'+String(ss.ov_id).padStart(3,'0')+' '+esc(ss.ov_desc||'')+'</span>' : '';
-            var gravHtml = (ss.gravite > 0) ? '<span style="font-size:0.72rem;color:#8b949e;">Grav.&nbsp;<span class="lvl-badge lvl-'+ss.gravite+'" style="font-size:0.68rem;padding:1px 6px;">'+ss.gravite+'</span></span>' : '';
-            var vraiHtml = (ss.vraisemblance > 0) ? '<span style="font-size:0.72rem;color:#8b949e;">Vrai.&nbsp;<span class="lvl-badge lvl-'+ss.vraisemblance+'" style="font-size:0.68rem;padding:1px 6px;">'+ss.vraisemblance+'</span></span>' : '';
+            var GRAV_OPTS = ['— nc —','1 Critique','2 Grave','3 Significative','4 Mineure'];
+            var VRAI_OPTS = ['— nc —','1 Très faible','2 Faible','3 Élevée','4 Très élevée'];
+            function scoreHtml(id, field, val, opts) {
+                if (!CAN_EDIT) {
+                    return val > 0
+                        ? '<span style="font-size:0.72rem;color:#8b949e;">'+(field==='gravite'?'Grav.':'Vrai.')+'&nbsp;<span class="lvl-badge lvl-'+val+'" style="font-size:0.68rem;padding:1px 6px;">'+val+'</span></span>'
+                        : '';
+                }
+                var o = opts.map(function(lbl,i) {
+                    return '<option value="'+i+'"'+(i==val?' selected':'')+'>'+lbl+'</option>';
+                }).join('');
+                return '<select class="score-sel'+(val>0?' set':'')+'" title="'+(field==='gravite'?'Gravité':'Vraisemblance')+'" onchange="patchSSScore('+id+',\''+field+'\',this.value)">'+o+'</select>';
+            }
+            var gravHtml = scoreHtml(ss.id, 'gravite',       ss.gravite,       GRAV_OPTS);
+            var vraiHtml = scoreHtml(ss.id, 'vraisemblance', ss.vraisemblance, VRAI_OPTS);
             var statBtn = CAN_EDIT
                 ? '<span class="ss-stat '+stat.cls+'" onclick="cycleSS('+ss.id+',\''+stat.next+'\')" title="Cliquer pour changer">'+stat.label+'</span>'
                 : '<span class="ss-stat '+stat.cls+'">'+stat.label+'</span>';
             var delBtn = IS_ADMIN ? '<button class="ss-del" onclick="deleteSS('+ss.id+')" title="Supprimer">🗑</button>' : '';
+            var canTransfer = ss.gravite > 0 && ss.vraisemblance > 0;
             var registreEl = '';
             if (ss.registre_id) {
                 registreEl = '<span style="font-size:0.7rem;padding:2px 8px;border-radius:10px;background:rgba(34,197,94,0.12);color:#22c55e;border:1px solid rgba(34,197,94,0.3);white-space:nowrap;" title="Entrée R'+String(ss.registre_id).padStart(3,'0')+' dans le Registre">✓ Dans le registre</span>';
-            } else if (CAN_EDIT && ss.statut === 'retenu') {
+            } else if (CAN_EDIT && ss.statut === 'retenu' && canTransfer) {
                 registreEl = '<button onclick="transferSS('+ss.id+')" style="font-size:0.7rem;padding:2px 9px;border-radius:4px;background:rgba(167,139,250,0.1);color:#a78bfa;border:1px solid rgba(167,139,250,0.35);cursor:pointer;white-space:nowrap;" title="Ajouter ce scénario au Registre des Risques">→ Envoyer au registre</button>';
+            } else if (CAN_EDIT && ss.statut === 'retenu' && !canTransfer) {
+                registreEl = '<span style="font-size:0.68rem;color:#f59e0b;white-space:nowrap;" title="Renseignez la gravité et la vraisemblance pour pouvoir envoyer au registre">⚠ Gravité/Vraisemblance requises</span>';
             }
             // PP : null → dropdown d'assignation si CAN_EDIT, sinon libellé "À définir"
             var ppHtml;
@@ -631,6 +649,14 @@ label.a3 { display:block; font-size:0.75rem; color:#8b949e; margin-bottom:4px; }
 
     window.assignPP = async function(ssId, ppId) {
         var payload = { id: ssId, pp_id: ppId ? parseInt(ppId) : null };
+        var res  = await fetch(API_SS, {method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+        var json = await res.json();
+        if (json.status==='success') loadSS(); else showMsg(json.message, false);
+    };
+
+    window.patchSSScore = async function(id, field, value) {
+        var payload = { id: id };
+        payload[field] = parseInt(value) || 0;
         var res  = await fetch(API_SS, {method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
         var json = await res.json();
         if (json.status==='success') loadSS(); else showMsg(json.message, false);
