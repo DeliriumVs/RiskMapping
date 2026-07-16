@@ -166,6 +166,25 @@ label.a3 { display:block; font-size:0.75rem; color:#8b949e; margin-bottom:4px; }
             </div>
         </div>
 
+        <!-- Formulaire édition PP -->
+        <div class="a3-form" id="form-pp-edit" style="display:none; border-color:#3b82f6; margin-bottom:14px;">
+            <input type="hidden" id="pp-edit-id">
+            <div class="fg fg-2" style="margin-bottom:10px;">
+                <div><label class="a3">Nom *</label><input type="text" id="pp-edit-nom" placeholder="Nom de la PP"></div>
+                <div><label class="a3">Type</label>
+                    <select id="pp-edit-type">
+                        <option>Externe</option><option>Interne</option><option>Partenaire</option>
+                        <option>Fournisseur</option><option>Client</option><option>Prestataire</option><option>Autre</option>
+                    </select>
+                </div>
+                <div style="grid-column:1/-1;"><label class="a3">Description (optionnel)</label><input type="text" id="pp-edit-desc"></div>
+            </div>
+            <div style="display:flex; gap:8px;">
+                <button class="btn-prim" onclick="savePP()">Enregistrer</button>
+                <button class="btn-sec" onclick="cancelEditPP()">Annuler</button>
+            </div>
+        </div>
+
         <div style="overflow-x:auto;">
             <table class="pp-table">
                 <thead>
@@ -399,7 +418,8 @@ label.a3 { display:block; font-size:0.75rem; color:#8b949e; margin-bottom:4px; }
         tb.innerHTML = allPPs.map(function(pp) {
             var c   = computePP(pp);
             var ppId = 'PP-' + String(pp.id).padStart(3,'0');
-            var del = IS_ADMIN ? '<button onclick="deletePP('+pp.id+')" style="background:none;border:none;color:#484f58;cursor:pointer;font-size:0.85rem;" title="Supprimer">🗑️</button>' : '';
+            var edit = CAN_EDIT ? '<button onclick="editPP('+pp.id+')" style="background:none;border:none;color:#3b82f6;cursor:pointer;font-size:0.85rem;" title="Modifier">✏️</button>' : '';
+            var del  = IS_ADMIN ? '<button onclick="deletePP('+pp.id+')" style="background:none;border:none;color:#484f58;cursor:pointer;font-size:0.85rem;" title="Supprimer">🗑️</button>' : '';
             return '<tr>' +
                 '<td><span class="pp-badge">' + esc(ppId) + '</span></td>' +
                 '<td style="color:#fff; font-weight:bold; max-width:180px;">' + esc(pp.nom) +
@@ -413,7 +433,7 @@ label.a3 { display:block; font-size:0.75rem; color:#8b949e; margin-bottom:4px; }
                 '<td>' + critSel(pp.id,'confiance',    pp.confiance,     CON_OPT) + '</td>' +
                 '<td style="text-align:center;">' + lvlBadge(c.fiab, FIA_LABELS) + '</td>' +
                 '<td style="text-align:center;">' + lvlBadge(c.menace, MEN_LABELS) + '</td>' +
-                (CAN_EDIT ? '<td>' + del + '</td>' : '') +
+                (CAN_EDIT ? '<td style="white-space:nowrap;">' + edit + del + '</td>' : '') +
             '</tr>';
         }).join('');
     }
@@ -455,6 +475,45 @@ label.a3 { display:block; font-size:0.75rem; color:#8b949e; margin-bottom:4px; }
             document.getElementById('form-pp').classList.remove('open');
             loadPP();
         }
+    };
+
+    window.editPP = function(id) {
+        var pp = allPPs.find(function(p) { return p.id === id; });
+        if (!pp) return;
+        document.getElementById('pp-edit-id').value   = id;
+        document.getElementById('pp-edit-nom').value  = pp.nom;
+        document.getElementById('pp-edit-type').value = pp.type_pp;
+        document.getElementById('pp-edit-desc').value = pp.description || '';
+        var f = document.getElementById('form-pp-edit');
+        f.style.display = 'block';
+        f.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    };
+
+    window.savePP = async function() {
+        var id   = parseInt(document.getElementById('pp-edit-id').value);
+        var nom  = document.getElementById('pp-edit-nom').value.trim();
+        if (!nom) { showMsg('Le nom est obligatoire.', false); return; }
+        var res  = await fetch(API_PP, {
+            method: 'PATCH',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                id,
+                nom,
+                type_pp:     document.getElementById('pp-edit-type').value,
+                description: document.getElementById('pp-edit-desc').value.trim()
+            })
+        });
+        var json = await res.json();
+        if (json.status === 'success') {
+            document.getElementById('form-pp-edit').style.display = 'none';
+            loadPP();
+        } else {
+            showMsg(json.message, false);
+        }
+    };
+
+    window.cancelEditPP = function() {
+        document.getElementById('form-pp-edit').style.display = 'none';
     };
 
     window.deletePP = async function(id) {
