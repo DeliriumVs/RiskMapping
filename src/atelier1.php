@@ -170,7 +170,7 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'MJ') {
                     </div>
                 </div>
             </div>
-            <div style="display:flex; gap:8px;">
+            <div style="display:flex; gap:8px; justify-content:flex-end;">
                 <button onclick="createBS()" style="background:#0ea5e9; border:none; color:#fff; padding:8px 16px; border-radius:4px; cursor:pointer;">Créer</button>
                 <button onclick="toggleAddBS()" style="background:#30363d; border:none; color:#8b949e; padding:8px 14px; border-radius:4px; cursor:pointer;">Annuler</button>
             </div>
