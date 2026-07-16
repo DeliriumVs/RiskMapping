@@ -861,6 +861,7 @@ label.a3 { display:block; font-size:0.75rem; color:#8b949e; margin-bottom:4px; }
             +'  * { box-sizing:border-box; margin:0; padding:0; font-family:Arial,sans-serif; }'
             +'  body { background:#fff; color:#111827; padding:20mm 15mm; }'
             +'  @page { size:A3 landscape; margin:15mm; }'
+            +'  * { -webkit-print-color-adjust:exact !important; print-color-adjust:exact !important; color-adjust:exact !important; }'
             +'  @media print { body { padding:0; } }'
             +'  h1 { font-size:16pt; color:#1d4ed8; border-bottom:2px solid #1d4ed8; padding-bottom:6px; margin-bottom:4px; }'
             +'  h2 { font-size:12pt; color:#374151; margin:20px 0 10px; border-left:3px solid #3b82f6; padding-left:10px; }'
