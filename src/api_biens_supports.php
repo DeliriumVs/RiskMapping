@@ -93,9 +93,12 @@ try {
             echo json_encode(['status' => 'error', 'message' => 'Droits insuffisants.']);
             exit;
         }
-        $input  = json_decode(file_get_contents('php://input'), true);
-        $bs_id  = (int)($input['bs_id']  ?? 0);
-        $vm_ids = $input['vm_ids'] ?? [];
+        $input       = json_decode(file_get_contents('php://input'), true);
+        $bs_id       = (int)($input['bs_id'] ?? $input['id'] ?? 0);
+        $nom         = trim($input['nom']         ?? '');
+        $type_bien   = trim($input['type_bien']   ?? '');
+        $description = trim($input['description'] ?? '');
+        $vm_ids      = $input['vm_ids'] ?? null;
 
         if (!$bs_id) {
             http_response_code(400);
@@ -103,16 +106,28 @@ try {
             exit;
         }
 
-        $pdo->prepare("DELETE FROM valeur_bien_support WHERE bien_support_id=?")->execute([$bs_id]);
+        if ($nom !== '') {
+            if (empty($nom)) {
+                http_response_code(400);
+                echo json_encode(['status' => 'error', 'message' => 'Le nom est obligatoire.']);
+                exit;
+            }
+            $pdo->prepare("UPDATE biens_supports SET nom=?, type_bien=?, description=? WHERE id=? AND analyse_id=?")
+                ->execute([$nom, $type_bien ?: 'Autre', $description, $bs_id, $analyse_id]);
+        }
 
-        if (!empty($vm_ids)) {
-            $stmtLink = $pdo->prepare("INSERT IGNORE INTO valeur_bien_support (valeur_metier_id, bien_support_id) VALUES (?, ?)");
-            foreach ($vm_ids as $vm_id) {
-                $stmtLink->execute([(int)$vm_id, $bs_id]);
+        if ($vm_ids !== null) {
+            $pdo->prepare("DELETE FROM valeur_bien_support WHERE bien_support_id=?")->execute([$bs_id]);
+            if (!empty($vm_ids)) {
+                $stmtLink = $pdo->prepare("INSERT IGNORE INTO valeur_bien_support (valeur_metier_id, bien_support_id) VALUES (?, ?)");
+                foreach ($vm_ids as $vm_id) {
+                    $stmtLink->execute([(int)$vm_id, $bs_id]);
+                }
             }
         }
 
-        echo json_encode(['status' => 'success', 'message' => 'Associations VM mises à jour.']);
+        log_audit($pdo, $_SESSION['admin_id'], 'BS_UPDATED', "Bien Support #$bs_id modifié");
+        echo json_encode(['status' => 'success', 'message' => 'Bien Support mis à jour.']);
         exit;
     }
 

@@ -127,6 +127,24 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'MJ') {
             <button onclick="toggleAddVM()" style="background:#30363d; border:none; color:#8b949e; padding:8px 14px; border-radius:4px; cursor:pointer;">Annuler</button>
         </div>
     </div>
+    <!-- Formulaire édition VM -->
+    <div id="vm-edit-form" style="display:none; background:#0d1117; border:1px solid #3b82f6; border-radius:8px; padding:16px; margin-bottom:16px;">
+        <div style="font-size:0.8rem; color:#3b82f6; font-weight:bold; margin-bottom:10px;">✏️ Modifier la Valeur Métier</div>
+        <input type="hidden" id="vm-edit-id">
+        <div style="display:grid; grid-template-columns:2fr 1fr 2fr; gap:10px; margin-bottom:10px;">
+            <input type="text" id="vm-edit-nom" placeholder="Nom *" style="background:#161b22; border:1px solid #30363d; color:#c9d1d9; padding:8px; border-radius:4px;">
+            <select id="vm-edit-critere" style="background:#161b22; border:1px solid #30363d; color:#c9d1d9; padding:8px; border-radius:4px;">
+                <option value="">— Critère (optionnel) —</option>
+                <option>Disponibilité</option><option>Confidentialité</option>
+                <option>Intégrité</option><option>Image / Réputation</option><option>Légal / Conformité</option>
+            </select>
+            <input type="text" id="vm-edit-desc" placeholder="Description (optionnel)" style="background:#161b22; border:1px solid #30363d; color:#c9d1d9; padding:8px; border-radius:4px;">
+        </div>
+        <div style="display:flex; gap:8px; justify-content:flex-end;">
+            <button onclick="saveVM()" style="background:#3b82f6; border:none; color:#fff; padding:8px 16px; border-radius:4px; cursor:pointer;">Enregistrer</button>
+            <button onclick="cancelEditVM()" style="background:#30363d; border:none; color:#8b949e; padding:8px 14px; border-radius:4px; cursor:pointer;">Annuler</button>
+        </div>
+    </div>
     <?php endif; ?>
 
     <!-- VM cards -->
@@ -173,6 +191,37 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'MJ') {
             <div style="display:flex; gap:8px; justify-content:flex-end;">
                 <button onclick="createBS()" style="background:#0ea5e9; border:none; color:#fff; padding:8px 16px; border-radius:4px; cursor:pointer;">Créer</button>
                 <button onclick="toggleAddBS()" style="background:#30363d; border:none; color:#8b949e; padding:8px 14px; border-radius:4px; cursor:pointer;">Annuler</button>
+            </div>
+        </div>
+        <!-- Formulaire édition BS -->
+        <div id="bs-edit-form" style="display:none; background:#0d1117; border:1px solid #0ea5e9; border-radius:8px; padding:16px; margin-bottom:14px;">
+            <div style="font-size:0.8rem; color:#0ea5e9; font-weight:bold; margin-bottom:10px;">✏️ Modifier le Bien Support</div>
+            <input type="hidden" id="bs-edit-id">
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:12px;">
+                <div>
+                    <label style="display:block; font-size:0.75rem; color:#8b949e; margin-bottom:4px;">Nom *</label>
+                    <input type="text" id="bs-edit-nom" style="width:100%; box-sizing:border-box; background:#161b22; border:1px solid #30363d; color:#c9d1d9; padding:8px; border-radius:4px;">
+                </div>
+                <div>
+                    <label style="display:block; font-size:0.75rem; color:#8b949e; margin-bottom:4px;">Type</label>
+                    <select id="bs-edit-type" style="width:100%; background:#161b22; border:1px solid #30363d; color:#c9d1d9; padding:8px; border-radius:4px;">
+                        <option>Logiciel / Application</option><option>Infrastructure réseau</option>
+                        <option>Serveur / Cloud</option><option>Poste de travail</option>
+                        <option>Personne / Équipe</option><option>Site / Local</option><option>Autre</option>
+                    </select>
+                </div>
+                <div style="grid-column:1/-1;">
+                    <label style="display:block; font-size:0.75rem; color:#8b949e; margin-bottom:4px;">Description (optionnel)</label>
+                    <input type="text" id="bs-edit-desc" style="width:100%; box-sizing:border-box; background:#161b22; border:1px solid #30363d; color:#c9d1d9; padding:8px; border-radius:4px;">
+                </div>
+                <div style="grid-column:1/-1;">
+                    <label style="display:block; font-size:0.75rem; color:#8b949e; margin-bottom:6px;">Valeurs Métier supportées</label>
+                    <div id="bs-edit-vm-cbs" style="display:flex; flex-wrap:wrap; gap:7px; background:#161b22; border:1px solid #30363d; border-radius:4px; padding:10px; min-height:40px;"></div>
+                </div>
+            </div>
+            <div style="display:flex; gap:8px; justify-content:flex-end;">
+                <button onclick="saveBS()" style="background:#0ea5e9; border:none; color:#fff; padding:8px 16px; border-radius:4px; cursor:pointer;">Enregistrer</button>
+                <button onclick="cancelEditBS()" style="background:#30363d; border:none; color:#8b949e; padding:8px 14px; border-radius:4px; cursor:pointer;">Annuler</button>
             </div>
         </div>
         <?php endif; ?>
@@ -262,6 +311,7 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'MJ') {
                     '<span class="vm-nom">' + esc(vm.nom) + '</span>' +
                     (vm.critere_impacte ? '<span class="vm-critere" style="color:' + cc + '; border-color:' + cc + '40; background:' + cc + '1a;">' + esc(vm.critere_impacte) + '</span>' : '') +
                     '<span class="vm-er-count">' + erCount + ' ER</span>' +
+                    (CAN_EDIT ? '<button onclick="event.stopPropagation(); editVM(' + vm.id + ')" style="background:none; border:none; color:#484f58; cursor:pointer; font-size:0.8rem; padding:2px 4px;" title="Modifier">✏️</button>' : '') +
                     (IS_ADMIN ? '<button onclick="event.stopPropagation(); deleteVM(' + vm.id + ')" style="background:none; border:none; color:#484f58; cursor:pointer; font-size:0.8rem; padding:2px 6px;" title="Supprimer la VM">🗑️</button>' : '') +
                     '<span class="vm-chevron" id="chevron-' + vm.id + '">▶</span>' +
                 '</div>' +
@@ -373,6 +423,34 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'MJ') {
         body.classList.toggle('open');
         chevron.classList.toggle('open');
     };
+
+    window.editVM = function(id) {
+        var vm = allVMs.find(function(v) { return v.id == id; });
+        if (!vm) return;
+        document.getElementById('form-add-vm').style.display = 'none';
+        document.getElementById('vm-edit-id').value       = id;
+        document.getElementById('vm-edit-nom').value      = vm.nom;
+        document.getElementById('vm-edit-critere').value  = vm.critere_impacte || '';
+        document.getElementById('vm-edit-desc').value     = vm.description || '';
+        var f = document.getElementById('vm-edit-form');
+        f.style.display = 'block';
+        f.scrollIntoView({ behavior:'smooth', block:'nearest' });
+    };
+
+    window.saveVM = async function() {
+        var id  = parseInt(document.getElementById('vm-edit-id').value);
+        var nom = document.getElementById('vm-edit-nom').value.trim();
+        if (!nom) { showMsg('Le nom est obligatoire.', false); return; }
+        var res  = await fetch(API_VM, {
+            method: 'PATCH', headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({ id, nom, critere: document.getElementById('vm-edit-critere').value, description: document.getElementById('vm-edit-desc').value.trim() })
+        });
+        var json = await res.json();
+        showMsg(json.message, json.status === 'success');
+        if (json.status === 'success') { document.getElementById('vm-edit-form').style.display = 'none'; load(); }
+    };
+
+    window.cancelEditVM = function() { document.getElementById('vm-edit-form').style.display = 'none'; };
 
     window.toggleAddVM = function() {
         var f = document.getElementById('form-add-vm');
@@ -513,7 +591,7 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'MJ') {
 
         el.innerHTML = '<table class="bs-table"><thead><tr>' +
             '<th>Identifiant</th><th>Type</th><th>Nom</th><th>VM associées</th>' +
-            (IS_ADMIN ? '<th class="no-print">Action</th>' : '') +
+            (CAN_EDIT ? '<th class="no-print">Action</th>' : '') +
             '</tr></thead><tbody>' +
             json.data.map(function(bs) {
                 var bsId     = 'BS-' + String(bs.id).padStart(3,'0');
@@ -521,7 +599,10 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'MJ') {
                 var vmBadges = (bs.vm_ids||[]).map(function(vid) {
                     return '<span style="font-family:monospace; font-size:0.68rem; background:rgba(59,130,246,0.1); color:#3b82f6; border:1px solid rgba(59,130,246,0.3); padding:1px 5px; border-radius:3px; margin-right:3px;">VM-' + String(vid).padStart(3,'0') + '</span>';
                 }).join('') || '<span style="color:#484f58;">—</span>';
-                var delBtn = IS_ADMIN ? '<td><button onclick="deleteBS(' + bs.id + ')" style="background:none; border:none; color:#484f58; cursor:pointer; font-size:0.85rem;" title="Supprimer">🗑️</button></td>' : '';
+                var actionCell = CAN_EDIT ? '<td style="white-space:nowrap;">' +
+            '<button onclick="editBS(' + bs.id + ')" style="background:none; border:none; color:#484f58; cursor:pointer; font-size:0.85rem; padding:2px 4px;" title="Modifier">✏️</button>' +
+            (IS_ADMIN ? '<button onclick="deleteBS(' + bs.id + ')" style="background:none; border:none; color:#484f58; cursor:pointer; font-size:0.85rem; padding:2px 4px;" title="Supprimer">🗑️</button>' : '') +
+            '</td>' : '';
                 return '<tr style="border-bottom:1px solid #1c2128;">' +
                     '<td><span class="bs-badge">' + esc(bsId) + '</span></td>' +
                     '<td style="color:#c9d1d9; font-size:0.82rem;">' + icon + ' ' + esc(bs.type_bien) + '</td>' +
@@ -529,11 +610,54 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'MJ') {
                         (bs.description ? '<br><span style="font-size:0.77rem; color:#8b949e; font-weight:normal;">' + esc(bs.description) + '</span>' : '') +
                     '</td>' +
                     '<td>' + vmBadges + '</td>' +
-                    delBtn +
+                    actionCell +
                 '</tr>';
             }).join('') +
             '</tbody></table>';
     }
+
+    function renderVMCheckboxesForEdit(selectedIds) {
+        var el = document.getElementById('bs-edit-vm-cbs');
+        if (!el) return;
+        if (allVMs.length === 0) { el.innerHTML = '<span style="color:#484f58;font-size:0.82rem;">Aucune VM.</span>'; return; }
+        el.innerHTML = allVMs.map(function(vm, idx) {
+            var checked = selectedIds.indexOf(vm.id) > -1 ? 'checked' : '';
+            return '<label style="display:flex;align-items:center;gap:5px;color:#c9d1d9;font-size:0.82rem;cursor:pointer;background:#21262d;border:1px solid #30363d;padding:3px 9px;border-radius:4px;">' +
+                '<input type="checkbox" class="bs-edit-vm-cb" value="' + vm.id + '" ' + checked + ' style="margin:0;">' +
+                '<span style="font-family:monospace;font-size:0.68rem;color:#3b82f6;">VM-' + String(idx+1).padStart(3,'0') + '</span>' +
+                esc(vm.nom) + '</label>';
+        }).join('');
+    }
+
+    window.editBS = function(id) {
+        var bs = bsData.find(function(b) { return b.id == id; });
+        if (!bs) return;
+        document.getElementById('form-add-bs').style.display = 'none';
+        document.getElementById('bs-edit-id').value      = id;
+        document.getElementById('bs-edit-nom').value     = bs.nom;
+        document.getElementById('bs-edit-type').value    = bs.type_bien;
+        document.getElementById('bs-edit-desc').value    = bs.description || '';
+        renderVMCheckboxesForEdit(bs.vm_ids || []);
+        var f = document.getElementById('bs-edit-form');
+        f.style.display = 'block';
+        f.scrollIntoView({ behavior:'smooth', block:'nearest' });
+    };
+
+    window.saveBS = async function() {
+        var id  = parseInt(document.getElementById('bs-edit-id').value);
+        var nom = document.getElementById('bs-edit-nom').value.trim();
+        if (!nom) { showMsg('Le nom est obligatoire.', false); return; }
+        var vm_ids = Array.from(document.querySelectorAll('.bs-edit-vm-cb:checked')).map(function(cb) { return parseInt(cb.value); });
+        var res  = await fetch(API_BS, {
+            method: 'PATCH', headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({ id, nom, type_bien: document.getElementById('bs-edit-type').value, description: document.getElementById('bs-edit-desc').value.trim(), vm_ids })
+        });
+        var json = await res.json();
+        showMsg(json.message, json.status === 'success');
+        if (json.status === 'success') { document.getElementById('bs-edit-form').style.display = 'none'; loadBS(); }
+    };
+
+    window.cancelEditBS = function() { document.getElementById('bs-edit-form').style.display = 'none'; };
 
     window.toggleAddBS = function() {
         var f = document.getElementById('form-add-bs');
