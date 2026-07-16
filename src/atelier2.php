@@ -64,6 +64,11 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'MJ') {
 .p-retenu     { background:rgba(34,197,94,0.15);   color:#22c55e; border:1px solid #22c55e55; }
 .p-non        { background:rgba(139,148,158,0.12); color:#8b949e; border:1px solid #8b949e44; text-decoration:line-through; }
 .ov-del       { background:none; border:none; color:#484f58; cursor:pointer; font-size:0.8rem; padding:2px 4px; flex-shrink:0; margin-top:2px; }
+.niv-sel      { font-size:0.72rem; padding:2px 6px; border-radius:10px; border:1px solid #30363d; background:#0d1117; color:#8b949e; cursor:pointer; flex-shrink:0; margin-top:2px; }
+.niv-faible   { background:rgba(139,148,158,0.15); color:#8b949e;  border-color:#8b949e55; }
+.niv-moderee  { background:rgba(59,130,246,0.15);  color:#3b82f6;  border-color:#3b82f655; }
+.niv-forte    { background:rgba(245,158,11,0.15);  color:#f59e0b;  border-color:#f59e0b55; }
+.niv-tresforte{ background:rgba(239,68,68,0.15);   color:#ef4444;  border-color:#ef444455; }
 .ov-del:hover { color:#da291c; }
 .ov-empty     { padding:10px 16px 12px; color:#484f58; font-size:0.8rem; font-style:italic; }
 
@@ -212,6 +217,16 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'MJ') {
                         <label>Description de l'objectif visé *</label>
                         <input type="text" id="ov-desc" placeholder="Ex: Chiffrement des données clients pour extorsion…">
                     </div>
+                    <div>
+                        <label>Niveau de pertinence</label>
+                        <select id="ov-niveau">
+                            <option value="">— optionnel —</option>
+                            <option value="Faible">Faible</option>
+                            <option value="Modérée">Modérée</option>
+                            <option value="Forte">Forte</option>
+                            <option value="Très forte">Très forte</option>
+                        </select>
+                    </div>
                     <div class="f-full">
                         <label>Notes (optionnel)</label>
                         <input type="text" id="ov-notes" placeholder="Ex: Déjà observé dans le secteur…">
@@ -285,6 +300,26 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'MJ') {
             cfg.label + ' ↻</span>';
     }
 
+    var NIV_MAP = {
+        'Faible':     { cls: 'niv-faible',    label: 'Faible' },
+        'Modérée':    { cls: 'niv-moderee',   label: 'Modérée' },
+        'Forte':      { cls: 'niv-forte',     label: 'Forte' },
+        'Très forte': { cls: 'niv-tresforte', label: 'Très forte' }
+    };
+
+    function niveauBadge(ov) {
+        var niv = ov.niveau_pertinence;
+        var opts = ['Faible','Modérée','Forte','Très forte'].map(function(v) {
+            return '<option value="' + v + '"' + (v === niv ? ' selected' : '') + '>' + v + '</option>';
+        }).join('');
+        var cls = niv && NIV_MAP[niv] ? NIV_MAP[niv].cls : '';
+        if (!CAN_EDIT) {
+            return niv ? '<span class="ov-pert ' + cls + '">' + esc(niv) + '</span>' : '';
+        }
+        return '<select class="niv-sel ' + cls + '" onchange="setNiveau(' + ov.id + ',this)" title="Niveau de pertinence">' +
+            '<option value="">— niveau —</option>' + opts + '</select>';
+    }
+
     function ovItem(ov) {
         var ovId   = 'OV-' + String(ov.display_num || ov.id).padStart(3, '0');
         var delBtn = IS_ADMIN ? '<button class="ov-del" onclick="deleteOV(' + ov.id + ')" title="Supprimer">🗑</button>' : '';
@@ -295,6 +330,7 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'MJ') {
                 (ov.notes ? '<div class="ov-notes-txt">' + esc(ov.notes) + '</div>' : '') +
             '</div>' +
             pertBadge(ov) +
+            niveauBadge(ov) +
             delBtn +
         '</div>';
     }
@@ -473,6 +509,25 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'MJ') {
         }
     };
 
+    // ── NIVEAU PERTINENCE OV ────────────────────────────
+    window.setNiveau = async function(ovId, sel) {
+        var val = sel.value || null;
+        var res  = await fetch(API_OV, {
+            method: 'PATCH',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ id: ovId, niveau_pertinence: val })
+        });
+        var json = await res.json();
+        if (json.status === 'success') {
+            var ov = allOVs.find(function(o) { return o.id === ovId; });
+            if (ov) ov.niveau_pertinence = val;
+            // Met à jour la classe couleur du select sans re-rendre
+            sel.className = 'niv-sel ' + (val && NIV_MAP[val] ? NIV_MAP[val].cls : '');
+        } else {
+            showMsg(json.message, false);
+        }
+    };
+
     // ── CRUD SR ─────────────────────────────────────────
     window.createSR = async function() {
         var type = document.getElementById('sr-type').value.trim();
@@ -516,11 +571,13 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'MJ') {
         var menace_id   = parseInt(document.getElementById('ov-sr-select').value);
         var description = document.getElementById('ov-desc').value.trim();
         if (!menace_id || !description) { showMsg('La SR et la description sont obligatoires.', false); return; }
+        var niv = document.getElementById('ov-niveau').value;
         var payload = {
             menace_id,
             description,
-            pertinence: document.getElementById('ov-pert').value,
-            notes:      document.getElementById('ov-notes').value.trim()
+            pertinence:         document.getElementById('ov-pert').value,
+            niveau_pertinence:  niv || null,
+            notes:              document.getElementById('ov-notes').value.trim()
         };
         var res  = await fetch(API_OV, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
         var json = await res.json();

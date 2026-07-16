@@ -113,8 +113,9 @@ CREATE TABLE objectifs_vises (
     analyse_id INT NOT NULL,
     menace_id  INT NOT NULL,
     description VARCHAR(255) NOT NULL,
-    pertinence ENUM('A évaluer', 'Retenu', 'Non retenu') NOT NULL DEFAULT 'A évaluer',
-    notes      TEXT NULL,
+    pertinence         ENUM('A évaluer', 'Retenu', 'Non retenu') NOT NULL DEFAULT 'A évaluer',
+    niveau_pertinence  ENUM('Faible', 'Modérée', 'Forte', 'Très forte') NULL DEFAULT NULL,
+    notes              TEXT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (analyse_id) REFERENCES analyses(id)  ON DELETE CASCADE,
     FOREIGN KEY (menace_id)  REFERENCES menaces(id)   ON DELETE CASCADE
