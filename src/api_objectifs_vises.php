@@ -35,11 +35,18 @@ try {
 
         $srs = $pdo->prepare("SELECT id, type_source FROM menaces WHERE analyse_id=? ORDER BY id ASC");
         $srs->execute([$analyse_id]);
+        $sources = $srs->fetchAll(PDO::FETCH_ASSOC);
+        foreach ($sources as $i => &$sr) { $sr['display_num'] = $i + 1; }
+        unset($sr);
+        $srRankMap = [];
+        foreach ($sources as $sr) { $srRankMap[$sr['id']] = $sr['display_num']; }
+        foreach ($data as &$ov) { $ov['sr_display_num'] = $srRankMap[$ov['menace_id']] ?? $ov['menace_id']; }
+        unset($ov);
 
         echo json_encode([
             'status'    => 'success',
             'data'      => $data,
-            'sources'   => $srs->fetchAll(PDO::FETCH_ASSOC),
+            'sources'   => $sources,
             'user_role' => $admin_role
         ]);
         exit;
