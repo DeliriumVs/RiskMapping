@@ -81,6 +81,19 @@ try {
         $id    = (int)($i['id']    ?? 0);
         $field = $i['field']       ?? '';
         $value = (int)($i['value'] ?? 1);
+        // Mise à jour nom/type/description
+        if (isset($i['nom'])) {
+            $nom  = trim($i['nom'] ?? '');
+            $type = in_array($i['type_pp'] ?? '', $TYPES) ? $i['type_pp'] : 'Externe';
+            $desc = trim($i['description'] ?? '');
+            if (empty($nom)) { http_response_code(400); echo json_encode(['status'=>'error','message'=>'Le nom est obligatoire.']); exit; }
+            $pdo->prepare("UPDATE parties_prenantes SET nom=?, type_pp=?, description=? WHERE id=? AND analyse_id=?")
+                ->execute([$nom, $type, $desc, $id, $analyse_id]);
+            log_audit($pdo,$_SESSION['admin_id'],'PP_UPDATED',"PP modifiée #$id : $nom");
+            echo json_encode(['status'=>'success','message'=>'Partie Prenante mise à jour.']);
+            exit;
+        }
+
         $allowed = ['dependance','penetration','maturite_cyber','confiance'];
         if (!$id || !in_array($field,$allowed,true)) { http_response_code(400); echo json_encode(['status'=>'error','message'=>'Paramètre invalide.']); exit; }
         $val = max(1, min(4, $value));
