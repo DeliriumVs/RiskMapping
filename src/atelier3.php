@@ -394,6 +394,7 @@ label.a3 { display:block; font-size:0.75rem; color:#8b949e; margin-bottom:4px; }
             return;
         }
         renderPP();
+        renderMatrix();
     }
 
     function renderPP() {
