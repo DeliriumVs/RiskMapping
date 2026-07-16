@@ -313,7 +313,7 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'MJ') {
             return;
         }
         el.innerHTML = allSRs.map(function(sr) {
-            var srId   = 'SR-' + String(sr.id).padStart(3, '0');
+            var srId   = 'SR-' + String(sr.display_num || sr.id).padStart(3, '0');
             var isAct  = sr.id === selectedSRId;
             var badges = noteBadge('M', sr.motivation_note, sr.id) +
                          noteBadge('R', sr.ressources_note, sr.id) +
@@ -365,7 +365,7 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'MJ') {
             }
             var html = '';
             allSRs.forEach(function(sr) {
-                var srId   = 'SR-' + String(sr.id).padStart(3, '0');
+                var srId   = 'SR-' + String(sr.display_num || sr.id).padStart(3, '0');
                 var srOVs  = allOVs.filter(function(ov) { return ov.menace_id == sr.id; });
                 var retenu = srOVs.filter(function(ov) { return ov.pertinence === 'Retenu'; }).length;
                 var cntLbl = srOVs.length + ' OV' + (retenu > 0 ? ' · ' + retenu + ' retenus' : '');
@@ -400,7 +400,7 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'MJ') {
         allSRs.forEach(function(sr) {
             var opt = document.createElement('option');
             opt.value = sr.id;
-            opt.textContent = 'SR-' + String(sr.id).padStart(3,'0') + ' — ' + sr.type_source;
+            opt.textContent = 'SR-' + String(sr.display_num || sr.id).padStart(3,'0') + ' — ' + sr.type_source;
             if (preselectId && sr.id == preselectId) opt.selected = true;
             else if (!preselectId && sr.id === selectedSRId) opt.selected = true;
             sel.appendChild(opt);

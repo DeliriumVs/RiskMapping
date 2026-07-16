@@ -23,7 +23,10 @@ try {
     if ($method === 'GET') {
         $stmt = $pdo->prepare("SELECT * FROM menaces WHERE analyse_id=? ORDER BY id ASC");
         $stmt->execute([$analyse_id]);
-        echo json_encode(["status" => "success", "data" => $stmt->fetchAll(), "user_role" => $admin_role]);
+        $data = $stmt->fetchAll();
+        foreach ($data as $i => &$row) { $row['display_num'] = $i + 1; }
+        unset($row);
+        echo json_encode(["status" => "success", "data" => $data, "user_role" => $admin_role]);
         exit;
     }
 

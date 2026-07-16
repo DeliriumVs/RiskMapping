@@ -85,7 +85,7 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'MJ' || $admin_role === '
                 if (json.user_role === 'admin') {
                     deleteBtnHTML = `<button onclick="deleteMenace(${menace.id})" style="background:none; border:none; color:#ff4d4d; cursor:pointer;" title="Supprimer">🗑️</button>`;
                 }
-                const srId = 'SR-' + String(menace.id).padStart(3, '0');
+                const srId = 'SR-' + String(menace.display_num || menace.id).padStart(3, '0');
                 tr.innerHTML = `
                     <td style="padding: 10px;">
                         <span style="font-family: monospace; font-size: 0.72rem; background: rgba(218,41,28,0.12); color: #da291c; border: 1px solid #da291c; padding: 2px 7px; border-radius: 4px;">${srId}</span>

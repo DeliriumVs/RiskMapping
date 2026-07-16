@@ -37,6 +37,9 @@ try {
         // Listes pour les selects du formulaire
         $srs = $pdo->prepare("SELECT id, type_source FROM menaces WHERE analyse_id=? ORDER BY id ASC");
         $srs->execute([$analyse_id]);
+        $sources = $srs->fetchAll();
+        foreach ($sources as $i => &$sr) { $sr['display_num'] = $i + 1; }
+        unset($sr);
         $pps = $pdo->prepare("SELECT id, nom, type_pp FROM parties_prenantes WHERE analyse_id=? ORDER BY id ASC");
         $pps->execute([$analyse_id]);
         $ovs = $pdo->prepare("SELECT ov.id, ov.description, m.type_source AS sr_nom FROM objectifs_vises ov JOIN menaces m ON m.id=ov.menace_id WHERE ov.analyse_id=? AND ov.pertinence='Retenu' ORDER BY ov.menace_id, ov.id");
@@ -45,7 +48,7 @@ try {
         echo json_encode([
             'status'    => 'success',
             'data'      => $stmt->fetchAll(),
-            'sources'   => $srs->fetchAll(),
+            'sources'   => $sources,
             'pp_list'   => $pps->fetchAll(),
             'ov_list'   => $ovs->fetchAll(),
             'user_role' => $admin_role

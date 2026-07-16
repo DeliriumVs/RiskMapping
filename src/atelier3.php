@@ -531,7 +531,7 @@ label.a3 { display:block; font-size:0.75rem; color:#8b949e; margin-bottom:4px; }
         var selSR = document.getElementById('ss-sr'); if (!selSR) return;
         selSR.innerHTML = '<option value="">— choisir —</option>';
         (json.sources||[]).forEach(function(sr) {
-            selSR.innerHTML += '<option value="'+sr.id+'">SR-'+String(sr.id).padStart(3,'0')+' — '+esc(sr.type_source)+'</option>';
+            selSR.innerHTML += '<option value="'+sr.id+'">SR-'+String(sr.display_num||sr.id).padStart(3,'0')+' — '+esc(sr.type_source)+'</option>';
         });
         var selPP = document.getElementById('ss-pp');
         selPP.innerHTML = '<option value="">— aucune / à définir —</option>';
@@ -556,7 +556,8 @@ label.a3 { display:block; font-size:0.75rem; color:#8b949e; margin-bottom:4px; }
         var SS_STAT = { a_evaluer:{cls:'ss-a',label:'À évaluer',next:'retenu'}, retenu:{cls:'ss-r',label:'Retenu',next:'non_retenu'}, non_retenu:{cls:'ss-n',label:'Non retenu',next:'a_evaluer'} };
         el.innerHTML = data.map(function(ss) {
             var ssId  = 'SS-' + String(ss.id).padStart(3,'0');
-            var srId  = 'SR-' + String(ss.menace_id).padStart(3,'0');
+            var srSrc = (ssCache.sources||[]).find(function(s) { return s.id == ss.menace_id; });
+            var srId  = 'SR-' + String(srSrc ? srSrc.display_num : ss.menace_id).padStart(3,'0');
             var stat  = SS_STAT[ss.statut] || SS_STAT['a_evaluer'];
             var ovHtml = ss.ov_id ? '<span class="ss-arrow">→</span><span class="ov-chip">OV-'+String(ss.ov_id).padStart(3,'0')+' '+esc(ss.ov_desc||'')+'</span>' : '';
             var GRAV_OPTS = ['— nc —','1 Critique','2 Grave','3 Significative','4 Mineure'];
