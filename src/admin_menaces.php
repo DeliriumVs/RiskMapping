@@ -28,6 +28,12 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'MJ' || $admin_role === '
         </tbody>
     </table>
 
+    <?php if ($admin_role === 'admin'): ?>
+    <div style="margin-bottom: 20px; padding: 12px 16px; background: rgba(239,68,68,0.07); border: 1px solid rgba(239,68,68,0.3); border-radius: 6px; display:flex; align-items:center; justify-content:space-between;">
+        <span style="color:#ef4444; font-size:0.85rem;">⚠️ Vider toutes les Sources de Risque supprimera aussi tous les Objectifs Visés et Scénarios Stratégiques associés.</span>
+        <button onclick="clearAllSR()" style="margin-left:16px; padding:7px 18px; background:#ef4444; border:none; color:#fff; border-radius:4px; cursor:pointer; font-size:0.85rem; white-space:nowrap;">🗑️ Vider SR + OV</button>
+    </div>
+    <?php endif; ?>
     <h4 style="color: #3b82f6; margin-bottom: 15px;">➕ Ajouter une Source de Risque</h4>
     <form id="form-add-menace" style="display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 10px; align-items: end;">
         <div>
@@ -125,6 +131,16 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'MJ' || $admin_role === '
             else { showMessageMenaces(json.message, true); }
         } catch (error) { showMessageMenaces("Erreur lors de la suppression.", true); }
     }
+
+    window.clearAllSR = async function() {
+        if (!confirm("ATTENTION : cette action supprimera TOUTES les Sources de Risque, tous les Objectifs Visés et tous les Scénarios Stratégiques de cette analyse.\n\nCette action est irréversible. Continuer ?")) return;
+        try {
+            const res  = await fetch(apiEndpointMenaces, { method: 'DELETE', headers: {'Content-Type':'application/json'}, body: JSON.stringify({action:'clear_all'}) });
+            const json = await res.json();
+            if (json.status === 'success') { showMessageMenaces(json.message); loadMenaces(); }
+            else { showMessageMenaces(json.message, true); }
+        } catch(e) { showMessageMenaces("Erreur lors de la réinitialisation.", true); }
+    };
 
     loadMenaces();
 </script>

@@ -93,7 +93,14 @@ try {
         $input  = json_decode(file_get_contents('php://input'), true);
         $id_del = (int)($input['id'] ?? 0);
 
-        if ($id_del > 0) {
+        if (($input['action'] ?? '') === 'clear_all') {
+            $cnt = $pdo->prepare("SELECT COUNT(*) FROM menaces WHERE analyse_id=?");
+            $cnt->execute([$analyse_id]);
+            $count = (int)$cnt->fetchColumn();
+            $pdo->prepare("DELETE FROM menaces WHERE analyse_id=?")->execute([$analyse_id]);
+            log_audit($pdo, $_SESSION['admin_id'], 'SR_CLEARED', "Réinitialisation : $count SR supprimés (+ OV et SS en cascade)");
+            echo json_encode(["status" => "success", "message" => "$count source(s) de risque supprimée(s) ainsi que les OV et SS associés."]);
+        } elseif ($id_del > 0) {
             $nom_stmt = $pdo->prepare("SELECT type_source FROM menaces WHERE id=? AND analyse_id=?");
             $nom_stmt->execute([$id_del, $analyse_id]);
             $nom_del = $nom_stmt->fetchColumn() ?: "ID $id_del";
