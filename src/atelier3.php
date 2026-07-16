@@ -129,9 +129,12 @@ label.a3 { display:block; font-size:0.75rem; color:#8b949e; margin-bottom:4px; }
             <div style="color:#8b949e; font-size:0.82rem;">
                 Les critères (1→4) modifiables directement dans le tableau — le niveau de menace est recalculé immédiatement.
             </div>
-            <?php if ($admin_role !== 'lecteur'): ?>
-            <button class="btn-open" onclick="toggleForm('form-pp')">➕ Ajouter une PP</button>
-            <?php endif; ?>
+            <div style="display:flex; gap:8px; align-items:center;">
+                <button class="btn-open" onclick="printA3()" title="Exporter en PDF">📄 Exporter PDF</button>
+                <?php if ($admin_role !== 'lecteur'): ?>
+                <button class="btn-open" onclick="toggleForm('form-pp')">➕ Ajouter une PP</button>
+                <?php endif; ?>
+            </div>
         </div>
 
         <!-- Formulaire ajout PP -->
@@ -757,6 +760,138 @@ label.a3 { display:block; font-size:0.75rem; color:#8b949e; margin-bottom:4px; }
         var json = await res.json();
         showMsg(json.message, json.status==='success');
         if (json.status==='success') loadSS();
+    };
+
+    // ── EXPORT PDF ──────────────────────────────────────────────
+    window.printA3 = function() {
+        var PRINT_CELL = { 1:'#d1fae5', 2:'#fef9c3', 3:'#fed7aa', 4:'#fecaca' };
+        var PRINT_LVL  = {
+            1: { bg:'#dcfce7', color:'#166534', border:'#86efac' },
+            2: { bg:'#fef9c3', color:'#854d0e', border:'#fde047' },
+            3: { bg:'#fed7aa', color:'#9a3412', border:'#fb923c' },
+            4: { bg:'#fecaca', color:'#991b1b', border:'#f87171' }
+        };
+        var MEN_LBL = {1:'Négligeable',2:'Limité',3:'Important',4:'Critique'};
+        var EXP_LBL = {1:'Faible',2:'Modérée',3:'Forte',4:'Critique'};
+        var FIA_LBL = {1:'Faible',2:'Modérée',3:'Correcte',4:'Forte'};
+
+        function esc2(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+        function badge(n, lblMap) {
+            var lc = PRINT_LVL[n] || PRINT_LVL[1];
+            return '<span style="background:' + lc.bg + ';color:' + lc.color + ';border:1px solid ' + lc.border + ';padding:2px 8px;border-radius:4px;font-size:0.8rem;font-weight:bold;">' + (lblMap[n]||n) + '</span>';
+        }
+
+        // ── Matrice
+        var matHtml = '<table style="border-collapse:collapse; margin:0 auto;">';
+        // en-tête colonnes (Pénétration)
+        matHtml += '<tr><td style="border:none;"></td>';
+        var penLabels = ['','1 Très limitée','2 Partielle','3 Significative','4 Totale'];
+        for (var p=1;p<=4;p++) matHtml += '<th style="border:1px solid #cbd5e1;padding:8px 12px;background:#f1f5f9;font-size:0.8rem;text-align:center;">'+penLabels[p]+'</th>';
+        matHtml += '</tr>';
+        var depLabels = {4:'4 Critique',3:'3 Forte',2:'2 Moyenne',1:'1 Faible'};
+        for (var d=4;d>=1;d--) {
+            matHtml += '<tr><th style="border:1px solid #cbd5e1;padding:8px 12px;background:#f1f5f9;font-size:0.8rem;white-space:nowrap;">'+depLabels[d]+'</th>';
+            for (var p2=1;p2<=4;p2++) {
+                var expo = EXPO[d][p2];
+                var bg   = PRINT_CELL[expo] || '#f8fafc';
+                var dots = allPPs.filter(function(pp){ return +pp.dependance===d && +pp.penetration===p2; }).map(function(pp) {
+                    var c = computePP(pp); var lc = PRINT_LVL[c.menace]||PRINT_LVL[1];
+                    return '<div style="background:'+lc.bg+';color:'+lc.color+';border:1px solid '+lc.border+';padding:2px 6px;border-radius:3px;font-size:0.72rem;font-weight:bold;margin:2px 0;">PP-'+String(pp.id).padStart(3,'0')+'</div>';
+                }).join('');
+                matHtml += '<td style="border:1px solid #cbd5e1;background:'+bg+';padding:10px 14px;text-align:center;min-width:110px;min-height:60px;vertical-align:middle;">'+dots+'</td>';
+            }
+            matHtml += '</tr>';
+        }
+        matHtml += '</table>';
+
+        // ── Légende
+        var legHtml = '<div style="display:flex;gap:16px;flex-wrap:wrap;margin-top:16px;justify-content:center;">';
+        [4,3,2,1].forEach(function(n) {
+            var lc = PRINT_LVL[n];
+            legHtml += '<div style="display:flex;align-items:center;gap:6px;"><span style="display:inline-block;width:20px;height:14px;background:'+lc.bg+';border:1px solid '+lc.border+';border-radius:2px;"></span><span style="font-size:0.8rem;color:#374151;">'+n+' — '+MEN_LBL[n]+'</span></div>';
+        });
+        legHtml += '</div>';
+        legHtml += '<div style="margin-top:8px;text-align:center;font-size:0.75rem;color:#6b7280;">La couleur du badge PP reflète le niveau de menace (Exposition × Fiabilité). La cellule reflète l\'exposition brute (Dépendance × Pénétration).</div>';
+
+        // ── Légende PP
+        var ppLegHtml = '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;">';
+        allPPs.forEach(function(pp) {
+            var c = computePP(pp); var lc = PRINT_LVL[c.menace]||PRINT_LVL[1];
+            ppLegHtml += '<div style="display:flex;align-items:center;gap:5px;border:1px solid #e5e7eb;border-radius:4px;padding:3px 8px;font-size:0.75rem;">'
+                +'<span style="background:'+lc.bg+';color:'+lc.color+';border:1px solid '+lc.border+';padding:1px 5px;border-radius:3px;font-weight:bold;font-size:0.72rem;">PP-'+String(pp.id).padStart(3,'0')+'</span>'
+                +'<span style="color:#111827;">'+esc2(pp.nom)+'</span>'
+                +'<span style="color:#6b7280;">('+MEN_LBL[c.menace]+')</span>'
+                +'</div>';
+        });
+        ppLegHtml += '</div>';
+
+        // ── Tableau PP
+        var tableHtml = '<table style="width:100%;border-collapse:collapse;font-size:0.78rem;margin-top:0;">'
+            +'<thead><tr style="background:#e2e8f0;">'
+            +'<th style="border:1px solid #cbd5e1;padding:7px 10px;text-align:left;">ID</th>'
+            +'<th style="border:1px solid #cbd5e1;padding:7px 10px;text-align:left;">Nom / Description</th>'
+            +'<th style="border:1px solid #cbd5e1;padding:7px 10px;text-align:left;">Type</th>'
+            +'<th style="border:1px solid #cbd5e1;padding:7px 10px;text-align:center;">Dép.</th>'
+            +'<th style="border:1px solid #cbd5e1;padding:7px 10px;text-align:center;">Pén.</th>'
+            +'<th style="border:1px solid #cbd5e1;padding:7px 10px;text-align:center;">Exposition</th>'
+            +'<th style="border:1px solid #cbd5e1;padding:7px 10px;text-align:center;">Mat. Cyber</th>'
+            +'<th style="border:1px solid #cbd5e1;padding:7px 10px;text-align:center;">Confiance</th>'
+            +'<th style="border:1px solid #cbd5e1;padding:7px 10px;text-align:center;">Fiabilité</th>'
+            +'<th style="border:1px solid #cbd5e1;padding:7px 10px;text-align:center;">Niveau menace</th>'
+            +'</tr></thead><tbody>';
+        allPPs.forEach(function(pp, i) {
+            var c   = computePP(pp);
+            var ppId = 'PP-' + String(pp.id).padStart(3,'0');
+            var rowBg = i % 2 === 0 ? '#ffffff' : '#f8fafc';
+            tableHtml += '<tr style="background:'+rowBg+';">'
+                +'<td style="border:1px solid #cbd5e1;padding:6px 10px;font-family:monospace;font-weight:bold;color:#1d4ed8;">'+ppId+'</td>'
+                +'<td style="border:1px solid #cbd5e1;padding:6px 10px;"><strong>'+esc2(pp.nom)+'</strong>'+(pp.description?'<br><span style="color:#6b7280;font-size:0.72rem;">'+esc2(pp.description)+'</span>':'')+'</td>'
+                +'<td style="border:1px solid #cbd5e1;padding:6px 10px;color:#374151;">'+esc2(pp.type_pp)+'</td>'
+                +'<td style="border:1px solid #cbd5e1;padding:6px 10px;text-align:center;">'+pp.dependance+'</td>'
+                +'<td style="border:1px solid #cbd5e1;padding:6px 10px;text-align:center;">'+pp.penetration+'</td>'
+                +'<td style="border:1px solid #cbd5e1;padding:6px 10px;text-align:center;">'+badge(c.expo, EXP_LBL)+'</td>'
+                +'<td style="border:1px solid #cbd5e1;padding:6px 10px;text-align:center;">'+pp.maturite_cyber+'</td>'
+                +'<td style="border:1px solid #cbd5e1;padding:6px 10px;text-align:center;">'+pp.confiance+'</td>'
+                +'<td style="border:1px solid #cbd5e1;padding:6px 10px;text-align:center;">'+badge(c.fiab, FIA_LBL)+'</td>'
+                +'<td style="border:1px solid #cbd5e1;padding:6px 10px;text-align:center;">'+badge(c.menace, MEN_LBL)+'</td>'
+                +'</tr>';
+        });
+        tableHtml += '</tbody></table>';
+
+        var html = '<!DOCTYPE html><html><head><meta charset="utf-8">'
+            +'<title>Atelier 3 — Parties Prenantes</title>'
+            +'<style>'
+            +'  * { box-sizing:border-box; margin:0; padding:0; font-family:Arial,sans-serif; }'
+            +'  body { background:#fff; color:#111827; padding:20mm 15mm; }'
+            +'  @page { size:A3 landscape; margin:15mm; }'
+            +'  @media print { body { padding:0; } }'
+            +'  h1 { font-size:16pt; color:#1d4ed8; border-bottom:2px solid #1d4ed8; padding-bottom:6px; margin-bottom:4px; }'
+            +'  h2 { font-size:12pt; color:#374151; margin:20px 0 10px; border-left:3px solid #3b82f6; padding-left:10px; }'
+            +'  .subtitle { font-size:9pt; color:#6b7280; margin-bottom:16px; }'
+            +'  .matrix-wrap { display:flex; gap:30px; align-items:flex-start; justify-content:center; margin-bottom:8px; }'
+            +'  .page-break { page-break-before:always; break-before:page; padding-top:10mm; }'
+            +'</style></head><body>'
+            +'<h1>🗺️ Atelier 3 — Parties Prenantes & Exposition</h1>'
+            +'<p class="subtitle">RiskMapping Suite · Généré le <?= date("d/m/Y") ?> · <strong style="color:#dc2626;">Diffusion restreinte</strong></p>'
+            +'<h2>📊 Matrice d\'exposition</h2>'
+            +'<div class="matrix-wrap">'
+            +'<div>'
+            +'<p style="font-size:0.75rem;color:#374151;margin-bottom:4px;font-weight:bold;">Dépendance ↑ / Pénétration →</p>'
+            + matHtml
+            + legHtml
+            +'</div></div>'
+            + ppLegHtml
+            +'<div class="page-break">'
+            +'<h2>👥 Tableau des Parties Prenantes</h2>'
+            + tableHtml
+            +'<p style="margin-top:10px;font-size:0.7rem;color:#9ca3af;">Dép. = Dépendance · Pén. = Pénétration · Mat. Cyber = Maturité Cybersécurité</p>'
+            +'</div>'
+            +'<script>window.onload=function(){window.print();}<\/script>'
+            +'</body></html>';
+
+        var w = window.open('', '_blank', 'width=1200,height=800');
+        w.document.write(html);
+        w.document.close();
     };
 
     // ── INIT ────────────────────────────────────────────────────
