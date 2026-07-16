@@ -122,7 +122,7 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'MJ') {
             </select>
             <input type="text" id="vm-desc" placeholder="Description (optionnel)" style="background:#161b22; border:1px solid #30363d; color:#c9d1d9; padding:8px; border-radius:4px;">
         </div>
-        <div style="display:flex; gap:8px;">
+        <div style="display:flex; gap:8px; justify-content:flex-end;">
             <button onclick="createVM()" style="background:#3b82f6; border:none; color:#fff; padding:8px 16px; border-radius:4px; cursor:pointer;">Créer</button>
             <button onclick="toggleAddVM()" style="background:#30363d; border:none; color:#8b949e; padding:8px 14px; border-radius:4px; cursor:pointer;">Annuler</button>
         </div>
