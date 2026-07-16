@@ -52,6 +52,29 @@ try {
         exit;
     }
 
+    if ($method === 'PATCH') {
+        if ($admin_role === 'lecteur') {
+            http_response_code(403);
+            echo json_encode(["status" => "error", "message" => "Droits insuffisants."]);
+            exit;
+        }
+        $input   = json_decode(file_get_contents('php://input'), true);
+        $id      = (int)($input['id']         ?? 0);
+        $nom     = trim($input['nom']         ?? '');
+        $critere = trim($input['critere']     ?? '');
+        $desc    = trim($input['description'] ?? '');
+        if (!$id || empty($nom)) {
+            http_response_code(400);
+            echo json_encode(["status" => "error", "message" => "ID et nom obligatoires."]);
+            exit;
+        }
+        $pdo->prepare("UPDATE valeurs_metier SET nom=?, critere_impacte=?, description=? WHERE id=? AND analyse_id=?")
+            ->execute([$nom, $critere ?: null, $desc, $id, $analyse_id]);
+        log_audit($pdo, $_SESSION['admin_id'], 'VALUE_UPDATED', "Valeur métier #$id modifiée : $nom");
+        echo json_encode(["status" => "success", "message" => "Valeur métier mise à jour."]);
+        exit;
+    }
+
     if ($method === 'DELETE') {
         if ($admin_role !== 'admin') {
             http_response_code(403);
