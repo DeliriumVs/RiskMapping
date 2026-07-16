@@ -559,7 +559,8 @@ label.a3 { display:block; font-size:0.75rem; color:#8b949e; margin-bottom:4px; }
             var srSrc = (ssCache.sources||[]).find(function(s) { return s.id == ss.menace_id; });
             var srId  = 'SR-' + String(srSrc ? srSrc.display_num : ss.menace_id).padStart(3,'0');
             var stat  = SS_STAT[ss.statut] || SS_STAT['a_evaluer'];
-            var ovHtml = ss.ov_id ? '<span class="ss-arrow">→</span><span class="ov-chip">OV-'+String(ss.ov_id).padStart(3,'0')+' '+esc(ss.ov_desc||'')+'</span>' : '';
+            var ovSrc  = (ssCache.ov_list||[]).find(function(o) { return o.id == ss.ov_id; });
+            var ovHtml = ss.ov_id ? '<span class="ss-arrow">→</span><span class="ov-chip">OV-'+String(ovSrc ? ovSrc.display_num : ss.ov_id).padStart(3,'0')+' '+esc(ss.ov_desc||'')+'</span>' : '';
             var GRAV_OPTS = ['— nc —','1 Critique','2 Grave','3 Significative','4 Mineure'];
             var VRAI_OPTS = ['— nc —','1 Très faible','2 Faible','3 Élevée','4 Très élevée'];
             function scoreWrap(id, field, val, opts, lbl) {

@@ -40,7 +40,10 @@ try {
         unset($sr);
         $srRankMap = [];
         foreach ($sources as $sr) { $srRankMap[$sr['id']] = $sr['display_num']; }
-        foreach ($data as &$ov) { $ov['sr_display_num'] = $srRankMap[$ov['menace_id']] ?? $ov['menace_id']; }
+        foreach ($data as $i => &$ov) {
+            $ov['display_num']    = $i + 1;
+            $ov['sr_display_num'] = $srRankMap[$ov['menace_id']] ?? $ov['menace_id'];
+        }
         unset($ov);
 
         echo json_encode([

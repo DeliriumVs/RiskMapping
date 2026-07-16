@@ -44,13 +44,16 @@ try {
         $pps->execute([$analyse_id]);
         $ovs = $pdo->prepare("SELECT ov.id, ov.description, m.type_source AS sr_nom FROM objectifs_vises ov JOIN menaces m ON m.id=ov.menace_id WHERE ov.analyse_id=? AND ov.pertinence='Retenu' ORDER BY ov.menace_id, ov.id");
         $ovs->execute([$analyse_id]);
+        $ov_list = $ovs->fetchAll();
+        foreach ($ov_list as $i => &$ov) { $ov['display_num'] = $i + 1; }
+        unset($ov);
 
         echo json_encode([
             'status'    => 'success',
             'data'      => $stmt->fetchAll(),
             'sources'   => $sources,
             'pp_list'   => $pps->fetchAll(),
-            'ov_list'   => $ovs->fetchAll(),
+            'ov_list'   => $ov_list,
             'user_role' => $admin_role
         ]);
         exit;

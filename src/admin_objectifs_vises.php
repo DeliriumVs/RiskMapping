@@ -103,7 +103,7 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'MJ' || $admin_role === '
             }
 
             json.data.forEach(ov => {
-                const ovId  = 'OV-' + String(ov.id).padStart(3, '0');
+                const ovId  = 'OV-' + String(ov.display_num || ov.id).padStart(3, '0');
                 const srId  = 'SR-' + String(ov.sr_display_num || ov.menace_id).padStart(3, '0');
                 const cfg   = pertinenceConfig[ov.pertinence] || pertinenceConfig['A évaluer'];
                 let delBtn  = `<span style="color:#8b949e; font-size:0.8rem;" title="Droits admin requis">🔒</span>`;
