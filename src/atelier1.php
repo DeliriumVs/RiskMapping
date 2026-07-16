@@ -244,8 +244,8 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'MJ') {
             return;
         }
 
-        el.innerHTML = allVMs.map(function(vm) {
-            var vmId  = 'VM-' + String(vm.id).padStart(3,'0');
+        el.innerHTML = allVMs.map(function(vm, vmIdx) {
+            var vmId  = 'VM-' + String(vmIdx + 1).padStart(3,'0');
             var ers   = allERs[vm.id] || [];
             var erCount = ers.length;
             var erHtml = renderERs(vm.id, ers);
@@ -343,8 +343,8 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'MJ') {
         if (ers.length === 0) {
             return '<div style="padding:12px 16px; color:#484f58; font-size:0.85rem; font-style:italic;">Aucun événement redouté défini.</div>';
         }
-        var rows = ers.map(function(er) {
-            var erId = 'ER-' + String(er.id).padStart(3,'0');
+        var rows = ers.map(function(er, erIdx) {
+            var erId = 'ER-' + String(erIdx + 1).padStart(3,'0');
             return '<div class="er-row">' +
                 '<span class="er-num">' + esc(erId) + '</span>' +
                 '<span class="er-cat cat-' + er.categorie.split('/')[0].trim() + '">' + esc(er.categorie) + '</span>' +
