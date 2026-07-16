@@ -20,12 +20,13 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'MJ' || $admin_role === '
                 <th style="padding: 10px; width: 110px;">Source de Risque</th>
                 <th style="padding: 10px;">Description de l'objectif</th>
                 <th style="padding: 10px; width: 130px;">Pertinence</th>
+                <th style="padding: 10px; width: 130px;">Niveau</th>
                 <th style="padding: 10px;">Notes</th>
                 <th style="padding: 10px; width: 50px;">Action</th>
             </tr>
         </thead>
         <tbody id="table-body-ov">
-            <tr><td colspan="6" style="text-align:center; padding:20px; color:#8b949e;">Chargement des données via API...</td></tr>
+            <tr><td colspan="7" style="text-align:center; padding:20px; color:#8b949e;">Chargement des données via API...</td></tr>
         </tbody>
     </table>
 
@@ -43,6 +44,16 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'MJ' || $admin_role === '
                 <option value="A évaluer">⏳ À évaluer</option>
                 <option value="Retenu">✅ Retenu</option>
                 <option value="Non retenu">❌ Non retenu</option>
+            </select>
+        </div>
+        <div>
+            <label style="display:block; font-size: 0.8rem; color:#8b949e; margin-bottom:5px;">Niveau de pertinence</label>
+            <select id="ov-niveau" style="width:100%; padding:10px; background:#0d1117; border:1px solid #30363d; color:#fff; border-radius:4px;">
+                <option value="">— optionnel —</option>
+                <option value="Faible">Faible</option>
+                <option value="Modérée">Modérée</option>
+                <option value="Forte">Forte</option>
+                <option value="Très forte">Très forte</option>
             </select>
         </div>
         <div style="grid-column: 1 / -1;">
@@ -96,9 +107,16 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'MJ' || $admin_role === '
                 srSelect.innerHTML += `<option value="${sr.id}">${srId} — ${sr.type_source}</option>`;
             });
 
+            const NIV_CFG = {
+                'Faible':     { color:'#8b949e', bg:'rgba(139,148,158,0.15)', border:'#8b949e55' },
+                'Modérée':    { color:'#3b82f6', bg:'rgba(59,130,246,0.15)',  border:'#3b82f655' },
+                'Forte':      { color:'#f59e0b', bg:'rgba(245,158,11,0.15)',  border:'#f59e0b55' },
+                'Très forte': { color:'#ef4444', bg:'rgba(239,68,68,0.15)',   border:'#ef444455' }
+            };
+
             tbody.innerHTML = '';
             if (json.data.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:10px; color:#8b949e;">Aucun Objectif Visé configuré.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:10px; color:#8b949e;">Aucun Objectif Visé configuré.</td></tr>';
                 return;
             }
 
@@ -106,6 +124,8 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'MJ' || $admin_role === '
                 const ovId  = 'OV-' + String(ov.display_num || ov.id).padStart(3, '0');
                 const srId  = 'SR-' + String(ov.sr_display_num || ov.menace_id).padStart(3, '0');
                 const cfg   = pertinenceConfig[ov.pertinence] || pertinenceConfig['A évaluer'];
+                const niv   = ov.niveau_pertinence;
+                const ncfg  = niv ? (NIV_CFG[niv] || {}) : null;
                 let delBtn  = `<span style="color:#8b949e; font-size:0.8rem;" title="Droits admin requis">🔒</span>`;
                 if (json.user_role === 'admin') {
                     delBtn = `<button onclick="deleteOV(${ov.id})" style="background:none; border:none; color:#ff4d4d; cursor:pointer;" title="Supprimer">🗑️</button>`;
@@ -114,6 +134,11 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'MJ' || $admin_role === '
                 const pertinenceSelect = Object.keys(pertinenceConfig).map(p =>
                     `<option value="${p}" ${p === ov.pertinence ? 'selected' : ''}>${pertinenceConfig[p].label}</option>`
                 ).join('');
+
+                const niveauOpts = ['Faible','Modérée','Forte','Très forte'].map(v =>
+                    `<option value="${v}" ${v === niv ? 'selected' : ''}>${v}</option>`
+                ).join('');
+                const niveauStyle = ncfg ? `background:${ncfg.bg}; color:${ncfg.color}; border:1px solid ${ncfg.border};` : 'background:#0d1117; color:#8b949e; border:1px solid #30363d;';
 
                 const tr = document.createElement('tr');
                 tr.style.borderBottom = '1px solid #30363d';
@@ -132,14 +157,21 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'MJ' || $admin_role === '
                             ${pertinenceSelect}
                         </select>
                     </td>
+                    <td style="padding:10px;">
+                        <select onchange="updateNiveau(${ov.id}, this)"
+                            style="padding:4px 8px; font-size:0.82rem; border-radius:4px; cursor:pointer; width:100%; ${niveauStyle}">
+                            <option value="">— nc —</option>
+                            ${niveauOpts}
+                        </select>
+                    </td>
                     <td style="padding:10px; color:#8b949e; font-size:0.85rem; text-align:left;">${ov.notes || '—'}</td>
                     <td style="padding:10px;">${delBtn}</td>
                 `;
                 tbody.appendChild(tr);
             });
 
-            // Re-color selects on render
-            tbody.querySelectorAll('select').forEach(sel => applyPertinenceColor(sel));
+            // Re-color pertinence selects on render
+            tbody.querySelectorAll('select[onchange^="updatePertinence"]').forEach(sel => applyPertinenceColor(sel));
         } catch(e) { showMsg("Erreur de connexion à l'API.", true); }
     }
 
@@ -155,20 +187,41 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'MJ' || $admin_role === '
             const res  = await fetch(API, { method: 'PATCH', headers: {'Content-Type':'application/json'}, body: JSON.stringify({id, pertinence}) });
             const json = await res.json();
             if (json.status === 'success') {
-                // Re-color the select immediately
                 const sel = tbody.querySelector(`select[onchange="updatePertinence(${id}, this.value)"]`);
                 if (sel) applyPertinenceColor(sel);
             } else { showMsg(json.message, true); }
         } catch(e) { showMsg("Erreur de mise à jour.", true); }
     };
 
+    const NIV_CFG_JS = {
+        'Faible':     { color:'#8b949e', bg:'rgba(139,148,158,0.15)', border:'#8b949e55' },
+        'Modérée':    { color:'#3b82f6', bg:'rgba(59,130,246,0.15)',  border:'#3b82f655' },
+        'Forte':      { color:'#f59e0b', bg:'rgba(245,158,11,0.15)',  border:'#f59e0b55' },
+        'Très forte': { color:'#ef4444', bg:'rgba(239,68,68,0.15)',   border:'#ef444455' }
+    };
+
+    window.updateNiveau = async function(id, sel) {
+        const val = sel.value || null;
+        try {
+            const res  = await fetch(API, { method: 'PATCH', headers: {'Content-Type':'application/json'}, body: JSON.stringify({id, niveau_pertinence: val}) });
+            const json = await res.json();
+            if (json.status === 'success') {
+                const ncfg = val ? NIV_CFG_JS[val] : null;
+                if (ncfg) { sel.style.background = ncfg.bg; sel.style.color = ncfg.color; sel.style.borderColor = ncfg.border; }
+                else { sel.style.background = '#0d1117'; sel.style.color = '#8b949e'; sel.style.borderColor = '#30363d'; }
+            } else { showMsg(json.message, true); }
+        } catch(e) { showMsg("Erreur de mise à jour.", true); }
+    };
+
     document.getElementById('form-add-ov').addEventListener('submit', async function(e) {
         e.preventDefault();
+        const niv = document.getElementById('ov-niveau').value;
         const data = {
-            menace_id:   parseInt(document.getElementById('ov-sr').value),
-            description: document.getElementById('ov-description').value,
-            pertinence:  document.getElementById('ov-pertinence').value,
-            notes:       document.getElementById('ov-notes').value
+            menace_id:          parseInt(document.getElementById('ov-sr').value),
+            description:        document.getElementById('ov-description').value,
+            pertinence:         document.getElementById('ov-pertinence').value,
+            niveau_pertinence:  niv || null,
+            notes:              document.getElementById('ov-notes').value
         };
         try {
             const res  = await fetch(API, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(data) });

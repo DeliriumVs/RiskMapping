@@ -23,7 +23,7 @@ try {
 
     if ($method === 'GET') {
         $stmt = $pdo->prepare("
-            SELECT ov.id, ov.menace_id, ov.description, ov.pertinence, ov.notes, ov.created_at,
+            SELECT ov.id, ov.menace_id, ov.description, ov.pertinence, ov.niveau_pertinence, ov.notes, ov.created_at,
                    m.type_source AS sr_nom
             FROM objectifs_vises ov
             JOIN menaces m ON m.id = ov.menace_id
@@ -73,8 +73,9 @@ try {
             exit;
         }
 
-        $pdo->prepare("INSERT INTO objectifs_vises (analyse_id, menace_id, description, pertinence, notes) VALUES (?, ?, ?, ?, ?)")
-            ->execute([$analyse_id, $menace_id, $description, $pertinence, $notes]);
+        $niveau = trim($input['niveau_pertinence'] ?? '') ?: null;
+        $pdo->prepare("INSERT INTO objectifs_vises (analyse_id, menace_id, description, pertinence, niveau_pertinence, notes) VALUES (?, ?, ?, ?, ?, ?)")
+            ->execute([$analyse_id, $menace_id, $description, $pertinence, $niveau, $notes]);
 
         $sr_stmt = $pdo->prepare("SELECT type_source FROM menaces WHERE id=?");
         $sr_stmt->execute([$menace_id]);
@@ -91,10 +92,8 @@ try {
             echo json_encode(['status' => 'error', 'message' => 'Droits insuffisants.']);
             exit;
         }
-        $input      = json_decode(file_get_contents('php://input'), true);
-        $id         = (int)($input['id']        ?? 0);
-        $pertinence = trim($input['pertinence'] ?? '');
-        $notes      = isset($input['notes']) ? trim($input['notes']) : null;
+        $input   = json_decode(file_get_contents('php://input'), true);
+        $id      = (int)($input['id'] ?? 0);
 
         if (!$id) {
             http_response_code(400);
@@ -102,15 +101,17 @@ try {
             exit;
         }
 
-        if ($pertinence && $notes !== null) {
-            $pdo->prepare("UPDATE objectifs_vises SET pertinence=?, notes=? WHERE id=? AND analyse_id=?")
-                ->execute([$pertinence, $notes, $id, $analyse_id]);
-        } elseif ($pertinence) {
-            $pdo->prepare("UPDATE objectifs_vises SET pertinence=? WHERE id=? AND analyse_id=?")
-                ->execute([$pertinence, $id, $analyse_id]);
-        } elseif ($notes !== null) {
-            $pdo->prepare("UPDATE objectifs_vises SET notes=? WHERE id=? AND analyse_id=?")
-                ->execute([$notes, $id, $analyse_id]);
+        $sets  = [];
+        $vals  = [];
+        if (!empty($input['pertinence']))        { $sets[] = 'pertinence=?';        $vals[] = trim($input['pertinence']); }
+        if (array_key_exists('niveau_pertinence', $input)) {
+            $nv = trim($input['niveau_pertinence'] ?? '') ?: null;
+            $sets[] = 'niveau_pertinence=?'; $vals[] = $nv;
+        }
+        if (array_key_exists('notes', $input))   { $sets[] = 'notes=?';             $vals[] = trim($input['notes']); }
+        if ($sets) {
+            $vals[] = $id; $vals[] = $analyse_id;
+            $pdo->prepare("UPDATE objectifs_vises SET " . implode(',', $sets) . " WHERE id=? AND analyse_id=?")->execute($vals);
         }
 
         echo json_encode(['status' => 'success', 'message' => 'Objectif Visé mis à jour.']);
