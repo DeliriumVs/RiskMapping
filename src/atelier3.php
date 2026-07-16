@@ -525,46 +525,60 @@ label.a3 { display:block; font-size:0.75rem; color:#8b949e; margin-bottom:4px; }
     };
 
     // ── MATRICE ─────────────────────────────────────────────────
+    var CELL_BG = {
+        1: 'rgba(34,197,94,0.25)',
+        2: 'rgba(234,179,8,0.35)',
+        3: 'rgba(245,158,11,0.50)',
+        4: 'rgba(218,41,28,0.60)'
+    };
+    var LVL_COLOR = {
+        1: { bg:'rgba(34,197,94,0.20)',  color:'#22c55e', border:'#22c55e' },
+        2: { bg:'rgba(234,179,8,0.20)',  color:'#eab308', border:'#eab308' },
+        3: { bg:'rgba(245,158,11,0.20)', color:'#f97316', border:'#f97316' },
+        4: { bg:'rgba(218,41,28,0.20)',  color:'#ef4444', border:'#da291c' }
+    };
+
     function renderMatrix() {
         var grid = document.getElementById('matrix-grid');
-        grid.innerHTML = '';
-        // Exposition statique (D × P → couleur de fond)
-        var EXPO_BG = { 1:'m-bg-1', 2:'m-bg-2', 3:'m-bg-3', 4:'m-bg-4' };
-        var cells = {};
-        // D=4 en haut → D=1 en bas dans la grille (row 1 = D=4)
+        if (!grid) return;
+
+        // Construire la grille via innerHTML (plus fiable dans les fragments injectés)
+        var html = '';
         for (var d=4; d>=1; d--) {
             for (var p=1; p<=4; p++) {
                 var expo = EXPO[d][p];
-                var cell = document.createElement('div');
-                cell.className = 'm-cell ' + EXPO_BG[expo];
-                cell.id = 'mcell-' + d + '-' + p;
-                grid.appendChild(cell);
-                cells[''+d+'_'+p] = cell;
+                var bg   = CELL_BG[expo] || '#0d1117';
+                html += '<div id="mcell-' + d + '-' + p + '" style="background:' + bg + '; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:8px; gap:5px; flex-wrap:wrap;"></div>';
             }
         }
-        // Placer les PP + liste en bas
-        var legend = document.getElementById('matrix-legend-pps');
-        legend.innerHTML = '';
-        if (allPPs.length === 0) {
-            legend.innerHTML = '<span style="color:#484f58;font-size:0.82rem;">Aucune PP créée.</span>';
-        }
+        grid.innerHTML = html;
+
+        // Placer les badges PP dans leur cellule
         allPPs.forEach(function(pp) {
-            var c     = computePP(pp);
-            var ppId  = 'PP-' + String(pp.id).padStart(3,'0');
-            var cell  = cells[''+pp.dependance+'_'+pp.penetration];
+            var c    = computePP(pp);
+            var ppId = 'PP-' + String(pp.id).padStart(3,'0');
+            var cell = document.getElementById('mcell-' + pp.dependance + '-' + pp.penetration);
             if (cell) {
-                var dot = document.createElement('span');
-                dot.className = 'm-pp-dot lvl-badge lvl-' + c.menace;
-                dot.title = ppId + ' — ' + pp.nom + '\nExposition : ' + EXP_LABELS[c.expo] + ' | Fiabilité : ' + FIA_LABELS[c.fiab] + ' | Menace : ' + MEN_LABELS[c.menace];
-                dot.textContent = ppId.replace('PP-','PP');
-                cell.appendChild(dot);
+                var lc = LVL_COLOR[c.menace] || LVL_COLOR[1];
+                cell.innerHTML += '<span title="' + esc(ppId + ' — ' + pp.nom) + '\nExposition : ' + EXP_LABELS[c.expo] + ' | Fiabilité : ' + FIA_LABELS[c.fiab] + ' | Menace : ' + MEN_LABELS[c.menace] + '" style="font-size:0.75rem; padding:4px 8px; border-radius:4px; font-weight:bold; cursor:default; background:' + lc.bg + '; color:' + lc.color + '; border:1px solid ' + lc.border + '; white-space:nowrap;">' + ppId + '</span>';
             }
-            legend.innerHTML += '<div style="display:flex;align-items:center;gap:7px;background:#0d1117;border:1px solid #21262d;border-radius:6px;padding:5px 10px;">' +
-                '<span class="lvl-badge lvl-' + c.menace + '" style="min-width:56px; text-align:center; font-size:0.7rem;">' + ppId + '</span>' +
-                '<span style="color:#c9d1d9; font-size:0.82rem;">' + esc(pp.nom) + '</span>' +
-                '<span style="color:#484f58; font-size:0.72rem; margin-left:4px;">menace ' + MEN_LABELS[c.menace] + '</span>' +
-            '</div>';
         });
+
+        // Légende PP en bas
+        var legend = document.getElementById('matrix-legend-pps');
+        if (!legend) return;
+        legend.innerHTML = allPPs.length === 0
+            ? '<span style="color:#484f58;font-size:0.82rem;">Aucune PP créée.</span>'
+            : allPPs.map(function(pp) {
+                var c  = computePP(pp);
+                var ppId = 'PP-' + String(pp.id).padStart(3,'0');
+                var lc = LVL_COLOR[c.menace] || LVL_COLOR[1];
+                return '<div style="display:flex;align-items:center;gap:7px;background:#0d1117;border:1px solid #21262d;border-radius:6px;padding:5px 10px;">' +
+                    '<span style="min-width:56px; text-align:center; font-size:0.7rem; font-weight:bold; padding:3px 6px; border-radius:4px; background:' + lc.bg + '; color:' + lc.color + '; border:1px solid ' + lc.border + ';">' + ppId + '</span>' +
+                    '<span style="color:#c9d1d9; font-size:0.82rem;">' + esc(pp.nom) + '</span>' +
+                    '<span style="color:#484f58; font-size:0.72rem; margin-left:4px;">menace ' + MEN_LABELS[c.menace] + '</span>' +
+                '</div>';
+            }).join('');
     }
 
     // ── SCÉNARIOS STRATÉGIQUES ───────────────────────────────────
