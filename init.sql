@@ -66,7 +66,7 @@ CREATE TABLE valeurs_metier (
     id INT AUTO_INCREMENT PRIMARY KEY,
     analyse_id INT NOT NULL,
     nom VARCHAR(150) NOT NULL,
-    critere_impacte VARCHAR(50) NOT NULL,
+    critere_impacte VARCHAR(50) NULL,
     description TEXT,
     FOREIGN KEY (analyse_id) REFERENCES analyses(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

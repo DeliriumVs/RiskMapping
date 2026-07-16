@@ -38,14 +38,14 @@ try {
         $critere = trim($input['critere']    ?? '');
         $desc   = trim($input['description'] ?? '');
 
-        if (empty($nom) || empty($critere)) {
+        if (empty($nom)) {
             http_response_code(400);
-            echo json_encode(["status" => "error", "message" => "Le nom et le critère sont obligatoires."]);
+            echo json_encode(["status" => "error", "message" => "Le nom est obligatoire."]);
             exit;
         }
 
         $pdo->prepare("INSERT INTO valeurs_metier (analyse_id, nom, critere_impacte, description) VALUES (?, ?, ?, ?)")
-            ->execute([$analyse_id, $nom, $critere, $desc]);
+            ->execute([$analyse_id, $nom, $critere ?: null, $desc]);
 
         log_audit($pdo, $_SESSION['admin_id'], 'VALUE_ADDED', "Valeur métier ajoutée : $nom");
         echo json_encode(["status" => "success", "message" => "Valeur métier ajoutée."]);
