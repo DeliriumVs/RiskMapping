@@ -286,7 +286,7 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'MJ') {
     }
 
     function ovItem(ov) {
-        var ovId   = 'OV-' + String(ov.id).padStart(3, '0');
+        var ovId   = 'OV-' + String(ov.display_num || ov.id).padStart(3, '0');
         var delBtn = IS_ADMIN ? '<button class="ov-del" onclick="deleteOV(' + ov.id + ')" title="Supprimer">🗑</button>' : '';
         return '<div class="ov-item">' +
             '<span class="ov-id">' + esc(ovId) + '</span>' +
