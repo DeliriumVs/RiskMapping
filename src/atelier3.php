@@ -117,8 +117,7 @@ label.a3 { display:block; font-size:0.75rem; color:#8b949e; margin-bottom:4px; }
 
     <!-- Tabs -->
     <div class="a3-tabs">
-        <div class="a3-tab active" onclick="switchTab('pp')">👥 Parties Prenantes</div>
-        <div class="a3-tab"       onclick="switchTab('matrix')">📊 Matrice Exposition</div>
+        <div class="a3-tab active" onclick="switchTab('pp')">👥 Parties Prenantes & Exposition</div>
         <div class="a3-tab"       onclick="switchTab('ss')">⚡ Scénarios Stratégiques</div>
     </div>
 
@@ -199,52 +198,47 @@ label.a3 { display:block; font-size:0.75rem; color:#8b949e; margin-bottom:4px; }
                 <strong style="color:#c9d1d9;">Confiance</strong> : 1 Inconnue · 2 Limitée · 3 Établie · 4 Forte
             </div>
         </div>
-    </div>
 
-    <!-- ═══════════════════════════════════════════════════════════════
-         TAB 2 : Matrice Exposition
-    ════════════════════════════════════════════════════════════════ -->
-    <div class="a3-pane" id="pane-matrix">
-        <div class="matrix-section">
-            <!-- Légende (gauche) + Matrice (droite) -->
-            <div class="matrix-top">
-                <div class="matrix-legend">
-                    <h4 style="color:#c9d1d9; margin:0 0 16px 0; font-size:0.95rem;">Niveau de menace</h4>
-                    <div class="ml-item"><div class="ml-dot lvl-4"></div>4 — Critique</div>
-                    <div class="ml-item"><div class="ml-dot lvl-3"></div>3 — Important</div>
-                    <div class="ml-item"><div class="ml-dot lvl-2"></div>2 — Limité</div>
-                    <div class="ml-item"><div class="ml-dot lvl-1"></div>1 — Négligeable</div>
-                    <div style="margin-top:20px; color:#484f58; font-size:0.78rem; line-height:1.7; max-width:200px;">
-                        La cellule indique le niveau d'exposition brut (Dépendance × Pénétration).<br>
-                        La couleur du badge tient compte de la fiabilité de la PP.
+        <!-- Matrice d'exposition -->
+        <div style="margin-top:28px; padding-top:20px; border-top:1px solid #30363d;">
+            <div style="color:#c9d1d9; font-size:0.95rem; font-weight:bold; margin-bottom:16px;">📊 Matrice d'exposition</div>
+            <div class="matrix-section">
+                <div class="matrix-top">
+                    <div class="matrix-legend">
+                        <h4 style="color:#c9d1d9; margin:0 0 16px 0; font-size:0.95rem;">Niveau de menace</h4>
+                        <div class="ml-item"><div class="ml-dot lvl-4"></div>4 — Critique</div>
+                        <div class="ml-item"><div class="ml-dot lvl-3"></div>3 — Important</div>
+                        <div class="ml-item"><div class="ml-dot lvl-2"></div>2 — Limité</div>
+                        <div class="ml-item"><div class="ml-dot lvl-1"></div>1 — Négligeable</div>
+                        <div style="margin-top:20px; color:#484f58; font-size:0.78rem; line-height:1.7; max-width:200px;">
+                            La cellule indique le niveau d'exposition brut (Dépendance × Pénétration).<br>
+                            La couleur du badge tient compte de la fiabilité de la PP.
+                        </div>
                     </div>
-                </div>
-
-                <div class="matrix-area">
-                    <div style="display:flex; align-items:center;">
-                        <div style="height:406px; display:flex; flex-direction:column; align-items:center; justify-content:center; margin-right:10px; flex-shrink:0; gap:6px;">
-                            <span style="color:#8b949e; font-size:1rem; line-height:1;">↑</span>
-                            <span style="writing-mode:vertical-rl; transform:rotate(180deg); color:#8b949e; font-size:0.8rem; font-weight:bold; white-space:nowrap; letter-spacing:0.04em;">Dépendance</span>
-                        </div>
-                        <div class="matrix-y">
-                            <div>4 Critique</div><div>3 Forte</div><div>2 Moyenne</div><div>1 Faible</div>
-                        </div>
-                        <div>
-                            <div class="matrix-grid" id="matrix-grid"></div>
-                            <div class="matrix-x">
-                                <div>1<br>Très limitée</div><div>2<br>Partielle</div><div>3<br>Significative</div><div>4<br>Totale</div>
+                    <div class="matrix-area">
+                        <div style="display:flex; align-items:center;">
+                            <div style="height:406px; display:flex; flex-direction:column; align-items:center; justify-content:center; margin-right:10px; flex-shrink:0; gap:6px;">
+                                <span style="color:#8b949e; font-size:1rem; line-height:1;">↑</span>
+                                <span style="writing-mode:vertical-rl; transform:rotate(180deg); color:#8b949e; font-size:0.8rem; font-weight:bold; white-space:nowrap; letter-spacing:0.04em;">Dépendance</span>
                             </div>
-                            <div style="text-align:center; color:#8b949e; font-size:0.8rem; font-weight:bold; margin-top:6px;">Pénétration →</div>
+                            <div class="matrix-y">
+                                <div>4 Critique</div><div>3 Forte</div><div>2 Moyenne</div><div>1 Faible</div>
+                            </div>
+                            <div>
+                                <div class="matrix-grid" id="matrix-grid"></div>
+                                <div class="matrix-x">
+                                    <div>1<br>Très limitée</div><div>2<br>Partielle</div><div>3<br>Significative</div><div>4<br>Totale</div>
+                                </div>
+                                <div style="text-align:center; color:#8b949e; font-size:0.8rem; font-weight:bold; margin-top:6px;">Pénétration →</div>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-
-            <!-- PP dans cette analyse (dessous) -->
-            <div class="matrix-bottom">
-                <div>
-                    <div style="color:#8b949e; font-size:0.78rem; font-weight:bold; margin-bottom:10px; text-transform:uppercase; letter-spacing:0.05em;">PP dans cette analyse</div>
-                    <div id="matrix-legend-pps" style="display:flex; flex-wrap:wrap; gap:8px;"></div>
+                <div class="matrix-bottom">
+                    <div>
+                        <div style="color:#8b949e; font-size:0.78rem; font-weight:bold; margin-bottom:10px; text-transform:uppercase; letter-spacing:0.05em;">PP dans cette analyse</div>
+                        <div id="matrix-legend-pps" style="display:flex; flex-wrap:wrap; gap:8px;"></div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -352,11 +346,10 @@ label.a3 { display:block; font-size:0.75rem; color:#8b949e; margin-bottom:4px; }
     window.switchTab = function(name) {
         activeTab = name;
         document.querySelectorAll('.a3-tab').forEach(function(t,i) {
-            t.classList.toggle('active', ['pp','matrix','ss'][i] === name);
+            t.classList.toggle('active', ['pp','ss'][i] === name);
         });
         document.querySelectorAll('.a3-pane').forEach(function(p) { p.classList.remove('active'); });
         document.getElementById('pane-'+name).classList.add('active');
-        if (name === 'matrix') renderMatrix();
         if (name === 'ss') loadSS();
     };
 
@@ -437,7 +430,7 @@ label.a3 { display:block; font-size:0.75rem; color:#8b949e; margin-bottom:4px; }
                 pp.niveau_menace_calc = json.computed.niveau_menace_calc;
             }
             renderPP();
-            if (activeTab === 'matrix') renderMatrix();
+            renderMatrix();
         } else if (json.status !== 'success') {
             showMsg(json.message, false);
         }
