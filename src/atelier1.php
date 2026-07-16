@@ -113,6 +113,7 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'MJ') {
         <div style="display:grid; grid-template-columns:2fr 1fr 2fr; gap:10px; margin-bottom:10px;">
             <input type="text" id="vm-nom" placeholder="Nom de la Valeur Métier *" style="background:#161b22; border:1px solid #30363d; color:#c9d1d9; padding:8px; border-radius:4px;">
             <select id="vm-critere" style="background:#161b22; border:1px solid #30363d; color:#c9d1d9; padding:8px; border-radius:4px;">
+                <option value="">— Critère (optionnel) —</option>
                 <option>Disponibilité</option>
                 <option>Confidentialité</option>
                 <option>Intégrité</option>
@@ -259,7 +260,7 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'MJ') {
                 '<div class="vm-card-header" onclick="toggleVM(' + vm.id + ')">' +
                     '<span class="vm-badge">' + esc(vmId) + '</span>' +
                     '<span class="vm-nom">' + esc(vm.nom) + '</span>' +
-                    '<span class="vm-critere" style="color:' + cc + '; border-color:' + cc + '40; background:' + cc + '1a;">' + esc(vm.critere_impacte) + '</span>' +
+                    (vm.critere_impacte ? '<span class="vm-critere" style="color:' + cc + '; border-color:' + cc + '40; background:' + cc + '1a;">' + esc(vm.critere_impacte) + '</span>' : '') +
                     '<span class="vm-er-count">' + erCount + ' ER</span>' +
                     (IS_ADMIN ? '<button onclick="event.stopPropagation(); deleteVM(' + vm.id + ')" style="background:none; border:none; color:#484f58; cursor:pointer; font-size:0.8rem; padding:2px 6px;" title="Supprimer la VM">🗑️</button>' : '') +
                     '<span class="vm-chevron" id="chevron-' + vm.id + '">▶</span>' +
@@ -411,6 +412,11 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'MJ') {
     window.addER = async function(vmId) {
         var desc = document.getElementById('er-desc-' + vmId).value.trim();
         if (!desc) { showMsg('La description est obligatoire.', false); return; }
+        var dictChecked = document.getElementById('er-dict-d-' + vmId).checked
+                       || document.getElementById('er-dict-i-' + vmId).checked
+                       || document.getElementById('er-dict-c-' + vmId).checked
+                       || document.getElementById('er-dict-t-' + vmId).checked;
+        if (!dictChecked) { showMsg('Au moins un critère DICT doit être coché.', false); return; }
         var res  = await fetch(API_ER, {
             method: 'POST', headers: {'Content-Type':'application/json'},
             body: JSON.stringify({
