@@ -136,7 +136,7 @@ $initial_view = (int)$stmt_count->fetchColumn() > 0 ? 'view_registre.php' : 'ate
                     </div>
                 </div>
                 <?php endif; ?>
-                <button onclick="window.print()" class="nav-btn-real nav-btn-danger">📄 PDF</button>
+                <button onclick="handlePrint()" class="nav-btn-real nav-btn-danger">📄 PDF</button>
                 <a href="export_global_csv.php" class="nav-btn-real" style="border-color: #107c41; color: #107c41;">🧮 CSV</a>
                 <a href="logout.php" class="nav-btn-real" style="border-color: #484f58; color: #8b949e;">Déconnexion</a>
             </div>
@@ -151,7 +151,18 @@ $initial_view = (int)$stmt_count->fetchColumn() > 0 ? 'view_registre.php' : 'ate
         const loader = document.getElementById('loader');
         const viewButtons = document.querySelectorAll('.nav-btn-view');
 
+        let currentView = null;
+
+        function handlePrint() {
+            if (currentView === 'atelier3.php' && typeof window.printA3 === 'function') {
+                window.printA3();
+            } else {
+                window.print();
+            }
+        }
+
         function loadContent(targetFile) {
+            currentView = targetFile;
             loader.style.display = 'block';
             contentArea.style.opacity = '0.5';
 

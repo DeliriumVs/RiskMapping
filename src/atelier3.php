@@ -129,12 +129,9 @@ label.a3 { display:block; font-size:0.75rem; color:#8b949e; margin-bottom:4px; }
             <div style="color:#8b949e; font-size:0.82rem;">
                 Les critères (1→4) modifiables directement dans le tableau — le niveau de menace est recalculé immédiatement.
             </div>
-            <div style="display:flex; gap:8px; align-items:center;">
-                <button class="btn-open" onclick="printA3()" title="Exporter en PDF">📄 Exporter PDF</button>
-                <?php if ($admin_role !== 'lecteur'): ?>
-                <button class="btn-open" onclick="toggleForm('form-pp')">➕ Ajouter une PP</button>
-                <?php endif; ?>
-            </div>
+            <?php if ($admin_role !== 'lecteur'): ?>
+            <button class="btn-open" onclick="toggleForm('form-pp')">➕ Ajouter une PP</button>
+            <?php endif; ?>
         </div>
 
         <!-- Formulaire ajout PP -->
