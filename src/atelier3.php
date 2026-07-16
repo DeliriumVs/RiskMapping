@@ -47,17 +47,17 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'MJ') {
 .matrix-top     { display:flex; align-items:flex-start; gap:32px; justify-content:center; }
 .matrix-legend  { display:flex; flex-direction:column; justify-content:center; min-width:200px; padding-top:8px; }
 .matrix-area    { flex:0 0 auto; }
-.matrix-grid    { display:grid; grid-template-columns:repeat(4,130px); grid-template-rows:repeat(4,100px); gap:2px; background:#30363d; border:2px solid #30363d; border-radius:4px; }
-.m-cell  { display:flex; flex-direction:column; align-items:center; justify-content:center; padding:6px; gap:4px; flex-wrap:wrap; position:relative; }
+.matrix-grid    { display:grid; grid-template-columns:repeat(4,160px); grid-template-rows:repeat(4,120px); gap:3px; background:#30363d; border:2px solid #30363d; border-radius:4px; }
+.m-cell  { display:flex; flex-direction:column; align-items:center; justify-content:center; padding:8px; gap:5px; flex-wrap:wrap; position:relative; }
 .m-bg-0  { background:#0d1117; }
-.m-bg-1  { background:rgba(34,197,94,0.10);   }
-.m-bg-2  { background:rgba(234,179,8,0.12);   }
-.m-bg-3  { background:rgba(245,158,11,0.18);  }
-.m-bg-4  { background:rgba(218,41,28,0.22);   }
-.m-pp-dot { font-size:0.72rem; padding:3px 7px; border-radius:4px; font-weight:bold; cursor:default; }
+.m-bg-1  { background:rgba(34,197,94,0.22);   }
+.m-bg-2  { background:rgba(234,179,8,0.28);   }
+.m-bg-3  { background:rgba(245,158,11,0.38);  }
+.m-bg-4  { background:rgba(218,41,28,0.45);   }
+.m-pp-dot { font-size:0.78rem; padding:4px 9px; border-radius:4px; font-weight:bold; cursor:default; }
 
-.matrix-y { display:flex; flex-direction:column; justify-content:space-between; height:406px; padding:0 10px 0 0; text-align:right; color:#8b949e; font-size:0.78rem; align-items:flex-end; }
-.matrix-x { display:grid; grid-template-columns:repeat(4,130px); text-align:center; color:#8b949e; font-size:0.78rem; padding-top:8px; gap:2px; }
+.matrix-y { display:flex; flex-direction:column; justify-content:space-between; height:490px; padding:0 10px 0 0; text-align:right; color:#8b949e; font-size:0.78rem; align-items:flex-end; }
+.matrix-x { display:grid; grid-template-columns:repeat(4,160px); text-align:center; color:#8b949e; font-size:0.78rem; padding-top:8px; gap:3px; }
 .ml-item  { display:flex; align-items:center; gap:10px; margin-bottom:12px; font-size:0.85rem; color:#c9d1d9; }
 .ml-dot   { width:36px; height:18px; border-radius:4px; flex-shrink:0; }
 .matrix-bottom { display:flex; gap:24px; justify-content:center; flex-wrap:wrap; margin-top:28px; padding-top:20px; border-top:1px solid #21262d; width:100%; }
@@ -236,7 +236,7 @@ label.a3 { display:block; font-size:0.75rem; color:#8b949e; margin-bottom:4px; }
                     </div>
                     <div class="matrix-area">
                         <div style="display:flex; align-items:center;">
-                            <div style="height:406px; display:flex; flex-direction:column; align-items:center; justify-content:center; margin-right:10px; flex-shrink:0; gap:6px;">
+                            <div style="height:490px; display:flex; flex-direction:column; align-items:center; justify-content:center; margin-right:10px; flex-shrink:0; gap:6px;">
                                 <span style="color:#8b949e; font-size:1rem; line-height:1;">↑</span>
                                 <span style="writing-mode:vertical-rl; transform:rotate(180deg); color:#8b949e; font-size:0.8rem; font-weight:bold; white-space:nowrap; letter-spacing:0.04em;">Dépendance</span>
                             </div>
