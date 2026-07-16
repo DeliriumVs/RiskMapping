@@ -23,6 +23,10 @@ $entite_nom     = $_SESSION['entite_nom']      ?? '—';
 
 $badge_statut_map = ['en_cours' => ['label'=>'En cours','color'=>'#22c55e'], 'finalisee' => ['label'=>'Finalisée','color'=>'#3b82f6'], 'archivee' => ['label'=>'Archivée','color'=>'#8b949e']];
 $bs = $badge_statut_map[$analyse_statut] ?? ['label'=>$analyse_statut,'color'=>'#8b949e'];
+
+$stmt_count = $pdo->prepare("SELECT COUNT(*) FROM scenarios_bruts WHERE analyse_id=?");
+$stmt_count->execute([$analyse_id]);
+$initial_view = (int)$stmt_count->fetchColumn() > 0 ? 'view_registre.php' : 'atelier1.php';
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -108,13 +112,13 @@ $bs = $badge_statut_map[$analyse_statut] ?? ['label'=>$analyse_statut,'color'=>'
         <div class="admin-navbar no-print">
             <div class="nav-group">
                 <span class="nav-title">Piloter</span>
-                <button class="nav-btn-view active" data-target="view_registre.php">📊 Registre</button>
+                <button class="nav-btn-view <?= $initial_view === 'view_registre.php' ? 'active' : '' ?>" data-target="view_registre.php">📊 Registre</button>
             </div>
 
             <?php if ($admin_role === 'admin' || $admin_role === 'animateur'): ?>
             <div class="nav-group">
                 <span class="nav-title">Ateliers</span>
-                <button class="nav-btn-view" data-target="atelier1.php" title="Valeurs Métier · Événements Redoutés · Biens Supports">📋 Atelier 1</button>
+                <button class="nav-btn-view <?= $initial_view === 'atelier1.php' ? 'active' : '' ?>" data-target="atelier1.php" title="Valeurs Métier · Événements Redoutés · Biens Supports">📋 Atelier 1</button>
                 <button class="nav-btn-view" data-target="atelier2.php" title="Sources de Risque · Objectifs Visés · Notation">🔗 Atelier 2</button>
                 <button class="nav-btn-view" data-target="atelier3.php" title="Parties Prenantes · Matrice Exposition · Scénarios Stratégiques">🗺️ Atelier 3</button>
             </div>
@@ -192,7 +196,7 @@ $bs = $badge_statut_map[$analyse_statut] ?? ['label'=>$analyse_statut,'color'=>'
             if (dd && !dd.contains(e.target)) dd.classList.remove('open');
         });
 
-        loadContent('view_registre.php');
+        loadContent('<?= $initial_view ?>');
     </script>
 </body>
 </html>
