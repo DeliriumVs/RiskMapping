@@ -94,9 +94,16 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'MJ') {
         <div style="color:#8b949e; font-size:0.82rem; margin-top:3px;">Cliquer un badge <strong style="color:#c9d1d9;">M·R·A</strong> pour noter une SR · Cliquer <strong style="color:#c9d1d9;">Pertinence ↻</strong> pour qualifier un OV · Cliquer une SR pour filtrer ses OV</div>
     </div>
     <?php if ($admin_role !== 'lecteur'): ?>
-    <button id="btn-seed" onclick="seedEBIOS()" style="background:rgba(245,158,11,0.1); border:1px solid #f59e0b; color:#f59e0b; padding:7px 14px; border-radius:6px; cursor:pointer; font-size:0.82rem; white-space:nowrap;" title="Insérer les 8 SR et 17 OV du référentiel officiel EBIOS RM ANSSI">
-        🎲 Pré-remplir EBIOS RM
-    </button>
+    <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+        <button id="btn-seed" onclick="seedEBIOS()" style="background:rgba(245,158,11,0.1); border:1px solid #f59e0b; color:#f59e0b; padding:7px 14px; border-radius:6px; cursor:pointer; font-size:0.82rem; white-space:nowrap;" title="Insérer les 8 SR et 17 OV du référentiel officiel EBIOS RM ANSSI">
+            🎲 Pré-remplir EBIOS RM
+        </button>
+        <?php if ($admin_role === 'admin'): ?>
+        <button onclick="clearAllSR()" style="background:rgba(239,68,68,0.1); border:1px solid #ef4444; color:#ef4444; padding:7px 14px; border-radius:6px; cursor:pointer; font-size:0.82rem; white-space:nowrap;" title="Supprimer toutes les SR, OV et SS de cette analyse">
+            🗑️ Vider SR + OV
+        </button>
+        <?php endif; ?>
+    </div>
     <?php endif; ?>
 </div>
 <div style="background:#161b22; border:1px solid #30363d; border-top:none; border-radius:0 0 8px 8px; padding:16px;">
@@ -580,6 +587,16 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'MJ') {
         } finally {
             if (btn) { btn.disabled = false; btn.textContent = '🎲 Pré-remplir EBIOS RM'; }
         }
+    };
+
+    window.clearAllSR = async function() {
+        if (!confirm("ATTENTION : cette action supprimera TOUTES les Sources de Risque, tous les Objectifs Visés et tous les Scénarios Stratégiques de cette analyse.\n\nCette action est irréversible. Continuer ?")) return;
+        try {
+            const res  = await fetch(API_SR, { method: 'DELETE', headers: {'Content-Type':'application/json'}, body: JSON.stringify({action:'clear_all'}) });
+            const json = await res.json();
+            if (json.status === 'success') { showMsg(json.message, true); load(); }
+            else { showMsg(json.message, false); }
+        } catch(e) { showMsg("Erreur lors de la réinitialisation.", false); }
     };
 
     load();
