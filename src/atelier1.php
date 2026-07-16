@@ -100,9 +100,13 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'MJ') {
             <div class="atl-title">📋 Atelier 1 — Cadrage</div>
             <div class="atl-subtitle">Valeurs Métier · Événements Redoutés · Biens Supports</div>
         </div>
-        <?php if ($admin_role !== 'lecteur'): ?>
-        <button onclick="toggleAddVM()" style="background:rgba(34,197,94,0.1); border:1px solid #22c55e; color:#22c55e; padding:7px 14px; border-radius:6px; cursor:pointer; font-size:0.85rem;">➕ Ajouter une VM</button>
-        <?php endif; ?>
+        <div style="display:flex; gap:8px; align-items:center;">
+            <button onclick="expandAllVMs()" style="background:transparent; border:1px solid #30363d; color:#8b949e; padding:5px 10px; border-radius:5px; cursor:pointer; font-size:0.78rem;" title="Déplier toutes les VM">⊞ Tout déplier</button>
+            <button onclick="collapseAllVMs()" style="background:transparent; border:1px solid #30363d; color:#8b949e; padding:5px 10px; border-radius:5px; cursor:pointer; font-size:0.78rem;" title="Replier toutes les VM">⊟ Tout replier</button>
+            <?php if ($admin_role !== 'lecteur'): ?>
+            <button onclick="toggleAddVM()" style="background:rgba(34,197,94,0.1); border:1px solid #22c55e; color:#22c55e; padding:7px 14px; border-radius:6px; cursor:pointer; font-size:0.85rem;">➕ Ajouter une VM</button>
+            <?php endif; ?>
+        </div>
     </div>
 
     <div class="msg-atl" id="msg-atl"></div>
@@ -241,6 +245,7 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'MJ') {
     var CAN_EDIT = <?= $admin_role !== 'lecteur' ? 'true' : 'false' ?>;
     var allVMs = [];
     var allERs = {};  // keyed by vm_id
+    var openVMIds = {};  // id → true si la carte est dépliée
 
     var CATS    = ['Financier','Opérationnel','Juridique','Image','Santé'];
     var IMPACTS = ['Mineur','Significatif','Majeur','Critique'];
@@ -284,7 +289,19 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'MJ') {
         }
 
         renderVMs();
+        restoreOpenVMs();
         loadBS();
+    }
+
+    function restoreOpenVMs() {
+        allVMs.forEach(function(vm) {
+            if (openVMIds[vm.id]) {
+                var body    = document.getElementById('vm-body-' + vm.id);
+                var chevron = document.getElementById('chevron-' + vm.id);
+                if (body)    body.classList.add('open');
+                if (chevron) chevron.classList.add('open');
+            }
+        });
     }
 
     function renderVMs() {
@@ -422,6 +439,23 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'MJ') {
         var chevron = document.getElementById('chevron-' + id);
         body.classList.toggle('open');
         chevron.classList.toggle('open');
+        openVMIds[id] = body.classList.contains('open');
+    };
+
+    window.expandAllVMs = function() {
+        allVMs.forEach(function(vm) {
+            var body    = document.getElementById('vm-body-' + vm.id);
+            var chevron = document.getElementById('chevron-' + vm.id);
+            if (body) { body.classList.add('open'); chevron.classList.add('open'); openVMIds[vm.id] = true; }
+        });
+    };
+
+    window.collapseAllVMs = function() {
+        allVMs.forEach(function(vm) {
+            var body    = document.getElementById('vm-body-' + vm.id);
+            var chevron = document.getElementById('chevron-' + vm.id);
+            if (body) { body.classList.remove('open'); chevron.classList.remove('open'); openVMIds[vm.id] = false; }
+        });
     };
 
     window.editVM = function(id) {
